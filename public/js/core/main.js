@@ -1,0 +1,1430 @@
+<!-- CORE JAVASCRIPT -->
+    <script src=<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurský Masakr - The Isle Evrima Wiki</title>
+    <meta name="description" content="Kompletní průvodce The Isle Evrima - všechny hratelné dinosaury, herní mechaniky a strategie přežití. Aktualizováno pro patch 0.18.11">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Color Palette */
+            --primary-color: #2e2e2e;
+            --secondary-color: #1a1a1a;
+            --accent-color: #4CAF50;
+            --accent-color-dark: #3e8e41;
+            --text-color: #f0f0f0;
+            --border-color: #444;
+            
+            /* Type-specific Colors */
+            --carnivore-color: #f44336;
+            --herbivore-color: #4CAF50;
+            --omnivore-color: #ff9800;
+            
+            /* Status Colors */
+            --success-color: #4CAF50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --info-color: #2196F3;
+            
+            /* Layout */
+            --sidebar-width: 320px;
+            --navbar-height: 70px;
+            --modal-z-index: 1000;
+            
+            /* Typography */
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-size-base: 16px;
+            --font-size-large: 20px;
+            --font-size-small: 14px;
+            
+            /* Spacing */
+            --spacing-xs: 5px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.2);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.3);
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: var(--font-size-base);
+        }
+
+        /* Layout Components */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--navbar-height);
+            background-color: var(--primary-color);
+            padding: 0 var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: var(--font-size-large);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--text-color);
+        }
+
+        .navbar h1 i {
+            color: var(--accent-color);
+            font-size: 1.2em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            transition: var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--font-size-small);
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .content-wrapper {
+            display: flex;
+            min-height: calc(100vh - var(--navbar-height));
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            padding: var(--spacing-lg);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            position: sticky;
+            top: var(--navbar-height);
+            height: calc(100vh - var(--navbar-height));
+        }
+
+        .main-content {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1e1e1e 100%);
+        }
+
+        /* Sidebar Components */
+        .search-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .search-section h3 {
+            color: var(--accent-color);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .universal-search {
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-color);
+            font-size: var(--font-size-base);
+            transition: var(--transition-normal);
+        }
+
+        .universal-search:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .search-filters {
+            margin-top: var(--spacing-sm);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xs);
+        }
+
+        .search-filters label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--font-size-small);
+            cursor: pointer;
+            padding: var(--spacing-xs);
+            border-radius: var(--radius-sm);
+            transition: var(--transition-fast);
+        }
+
+        .search-filters label:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .search-filters input[type="checkbox"] {
+            accent-color: var(--accent-color);
+        }
+
+        .dynamic-filters {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .filter-btn {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-family: inherit;
+            font-size: var(--font-size-small);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .filter-btn.active {
+            border-color: var(--accent-color);
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .filter-btn.carnivore.active {
+            border-color: var(--carnivore-color);
+            background-color: var(--carnivore-color);
+        }
+
+        .filter-btn.herbivore.active {
+            border-color: var(--herbivore-color);
+            background-color: var(--herbivore-color);
+        }
+
+        .filter-btn.omnivore.active {
+            border-color: var(--omnivore-color);
+            background-color: var(--omnivore-color);
+        }
+
+        .quick-access {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .quick-access h3 {
+            color: var(--accent-color);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .quick-links {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .quick-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            transition: var(--transition-fast);
+            font-size: var(--font-size-small);
+        }
+
+        .quick-links a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--accent-color);
+        }
+
+        /* Content Area */
+        .content-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-xl);
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-color-dark));
+            border-radius: var(--radius-lg);
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .content-header h1 {
+            margin: 0 0 var(--spacing-sm) 0;
+            font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+        }
+
+        .patch-info {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-lg);
+            font-size: var(--font-size-small);
+        }
+
+        .loading-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            color: #aaa;
+        }
+
+        .loading-placeholder i {
+            font-size: 3em;
+            margin-bottom: var(--spacing-lg);
+            color: var(--accent-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Modal System */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: var(--modal-z-index);
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: var(--primary-color);
+            margin: 2% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 1200px;
+            border-radius: var(--radius-lg);
+            position: relative;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(62, 142, 65, 0.1));
+        }
+
+        .modal-close {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-lg);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+            transition: var(--transition-fast);
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: var(--error-color);
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+
+        .modal-body {
+            padding: var(--spacing-xl);
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-xl);
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .modal-tab {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition-normal);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .modal-tab:hover {
+            color: var(--accent-color);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .modal-tab.active {
+            border-bottom-color: var(--accent-color);
+            color: var(--accent-color);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .modal-tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-tab-content.active {
+            display: block;
+        }
+
+        /* Dinosaur Cards Grid */
+        .dino-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+
+        .dino-card {
+            background-color: var(--primary-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: var(--transition-normal);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .dino-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-color);
+        }
+
+        .dino-card.carnivore {
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+
+        .dino-card.carnivore:hover {
+            border-color: var(--carnivore-color);
+            box-shadow: 0 8px 16px rgba(244, 67, 54, 0.3);
+        }
+
+        .dino-card.herbivore {
+            border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        .dino-card.herbivore:hover {
+            border-color: var(--herbivore-color);
+            box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+        }
+
+        .dino-card.omnivore {
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+
+        .dino-card.omnivore:hover {
+            border-color: var(--omnivore-color);
+            box-shadow: 0 8px 16px rgba(255, 152, 0, 0.3);
+        }
+
+        .dino-card-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #2e2e2e, #1a1a1a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dino-card-image i {
+            font-size: 4em;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dino-type-badge {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-small);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .dino-type-badge.carnivore {
+            background-color: var(--carnivore-color);
+            color: white;
+        }
+
+        .dino-type-badge.herbivore {
+            background-color: var(--herbivore-color);
+            color: white;
+        }
+
+        .dino-type-badge.omnivore {
+            background-color: var(--omnivore-color);
+            color: white;
+        }
+
+        .dino-card-content {
+            padding: var(--spacing-lg);
+        }
+
+        .dino-card-title {
+            font-size: var(--font-size-large);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .dino-card-subtitle {
+            color: #aaa;
+            font-size: var(--font-size-small);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .dino-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .dino-stat {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--font-size-small);
+        }
+
+        .dino-stat i {
+            width: 20px;
+            text-align: center;
+            color: var(--accent-color);
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .section-header h2 {
+            font-size: 2em;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+        }
+
+        .section-header p {
+            color: #aaa;
+            font-size: var(--font-size-base);
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .data-table th {
+            background-color: var(--accent-color);
+            color: white;
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges and Pills */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .badge.success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success-color);
+        }
+
+        .badge.warning {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--warning-color);
+        }
+
+        .badge.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--error-color);
+        }
+
+        .badge.info {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: var(--info-color);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.1) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.1) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 20px 20px;
+            animation: progress-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-stripes {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 20px 0;
+            }
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: var(--spacing-sm);
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-size: var(--font-size-small);
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            margin-bottom: 5px;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes rotateIn {
+            from {
+                opacity: 0;
+                transform: rotate(-5deg) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: rotate(0) scale(1);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .animate-scaleIn {
+            animation: scaleIn 0.3s ease forwards;
+        }
+
+        .animate-rotateIn {
+            animation: rotateIn 0.4s ease forwards;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                gap: var(--spacing-xs);
+            }
+
+            .nav-links a {
+                font-size: 12px;
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 1% auto;
+            }
+
+            .modal-tabs {
+                flex-wrap: wrap;
+            }
+
+            .content-header h1 {
+                font-size: 2em;
+            }
+
+            .search-filters {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .navbar {
+                flex-direction: column;
+                padding: var(--spacing-sm);
+                height: auto;
+            }
+
+            .navbar h1 {
+                font-size: var(--font-size-base);
+            }
+
+            .nav-links {
+                margin-top: var(--spacing-sm);
+            }
+
+            .main-content {
+                padding: var(--spacing-lg);
+            }
+
+            .content-header {
+                padding: var(--spacing-lg);
+            }
+
+            .content-header h1 {
+                font-size: 1.5em;
+                flex-direction: column;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .error {
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+
+        .success {
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .warning {
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-column {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .gap-sm {
+            gap: var(--spacing-sm);
+        }
+
+        .gap-md {
+            gap: var(--spacing-md);
+        }
+
+        .gap-lg {
+            gap: var(--spacing-lg);
+        }
+    </style>
+</head>
+<body>
+    <!-- STICKY NAVBAR -->
+    <nav class="navbar">
+        <h1><i class="fa-solid fa-dragon"></i> Jurský Masakr - Wiki</h1>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">
+                <i class="fa-solid fa-map-marked-alt"></i> Mapa
+            </a>
+            <a href="/stats" class="nav-link">
+                <i class="fa-solid fa-chart-bar"></i> Statistiky
+            </a>
+            <a href="#playables" class="nav-link active" data-section="playables">
+                <i class="fa-solid fa-dragon"></i> Hratelné druhy
+            </a>
+            <a href="#diet-food" class="nav-link" data-section="diet-food">
+                <i class="fa-solid fa-leaf"></i> Strava & Jídlo
+            </a>
+            <a href="#health-status" class="nav-link" data-section="health-status">
+                <i class="fa-solid fa-heart-pulse"></i> Zdraví & Statusy
+            </a>
+            <a href="#group-play" class="nav-link" data-section="group-play">
+                <i class="fa-solid fa-users"></i> Skupinová hra
+            </a>
+            <a href="#travel-world" class="nav-link" data-section="travel-world">
+                <i class="fa-solid fa-map"></i> Cestování & Svět
+            </a>
+            <a href="#mechanics" class="nav-link" data-section="mechanics">
+                <i class="fa-solid fa-gears"></i> Mechaniky
+            </a>
+            <a href="#controls" class="nav-link" data-section="controls">
+                <i class="fa-solid fa-keyboard"></i> Ovládání
+            </a>
+            <a href="#upcoming" class="nav-link" data-section="upcoming">
+                <i class="fa-solid fa-sparkles"></i> Připravované
+            </a>
+        </div>
+    </nav>
+    
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="content-wrapper">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <!-- Universal Search -->
+            <div class="search-section">
+                <h3><i class="fa-solid fa-magnifying-glass"></i> Univerzální vyhledávání</h3>
+                <input type="text" class="universal-search" id="universalSearch" placeholder="Hledat ve všech sekcích...">
+                <div class="search-filters">
+                    <label>
+                        <input type="checkbox" value="dinosaurs" checked> Dinosauři
+                    </label>
+                    <label>
+                        <input type="checkbox" value="plants" checked> Rostliny
+                    </label>
+                    <label>
+                        <input type="checkbox" value="mutations" checked> Mutace
+                    </label>
+                    <label>
+                        <input type="checkbox" value="effects" checked> Efekty
+                    </label>
+                    <label>
+                        <input type="checkbox" value="locations" checked> Lokace
+                    </label>
+                    <label>
+                        <input type="checkbox" value="mechanics" checked> Mechaniky
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Dynamic Filters (changes based on active section) -->
+            <div class="dynamic-filters" id="dynamicFilters">
+                <h3><i class="fa-solid fa-filter"></i> Filtry</h3>
+                <div class="filter-buttons" id="filterButtons">
+                    <!-- Dynamic content based on active section -->
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fa-solid fa-dragon"></i> Všichni
+                    </button>
+                    <button class="filter-btn carnivore" data-filter="carnivore">
+                        <i class="fa-solid fa-teeth"></i> Masožravci
+                    </button>
+                    <button class="filter-btn herbivore" data-filter="herbivore">
+                        <i class="fa-solid fa-leaf"></i> Býložravci
+                    </button>
+                    <button class="filter-btn omnivore" data-filter="omnivore">
+                        <i class="fa-solid fa-balance-scale"></i> Všežravci
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Access -->
+            <div class="quick-access">
+                <h3><i class="fa-solid fa-bolt"></i> Rychlý přístup</h3>
+                <div class="quick-links">
+                    <a href="#growth-calculator"><i class="fa-solid fa-calculator"></i> Kalkulátor růstu</a>
+                    <a href="#diet-planner"><i class="fa-solid fa-utensils"></i> Plánovač stravy</a>
+                    <a href="#mutation-builder"><i class="fa-solid fa-dna"></i> Stavěč mutací</a>
+                    <a href="#pack-finder"><i class="fa-solid fa-users"></i> Hledač smečky</a>
+                    <a href="#map-explorer"><i class="fa-solid fa-map-location-dot"></i> Průzkumník mapy</a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- Content Area -->
+            <div id="contentArea">
+                <!-- Dynamic content based on navigation -->
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-dragon"></i> The Isle: Evrima Wiki</h1>
+                    <p>Kompletní průvodce světem prehistorických tvorů</p>
+                    <div class="patch-info">
+                        <strong><i class="fa-solid fa-code-branch"></i> Patch 0.18.11</strong> | 
+                        Vydáno 21. prosince 2024 | 
+                        <strong>Grow Rate: 1.5x</strong>
+                        <div style="font-size: 0.9em; margin-top: 8px;">
+                            ✨ Nově přidán: <strong>Maiasaura</strong> • Gastroliths na štěrku • Vylepšené bucking mechaniky
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading Placeholder -->
+                <div class="loading-placeholder" id="loadingPlaceholder">
+                    <i class="fa-solid fa-dragon"></i>
+                    <h2>Načítání obsahu...</h2>
+                    <p>Připravujeme data pro 17 hratelných druhů dinosaurů</p>
+                </div>
+                
+                <!-- Actual Content Container -->
+                <div id="dynamicContent" class="hidden">
+                    <!-- Content will be loaded here dynamically -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- UNIVERSAL MODAL SYSTEM -->
+    <div id="universalModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <div class="modal-header" id="modalHeader">
+                <!-- Dynamic header content -->
+                <div class="flex items-center gap-md">
+                    <i class="fa-solid fa-dragon" style="font-size: 2em; color: var(--accent-color);"></i>
+                    <div>
+                        <h2 id="modalTitle">Detail</h2>
+                        <p id="modalSubtitle">Načítání...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tabs" id="modalTabs">
+                    <!-- Dynamic tabs based on content type -->
+                    <button class="modal-tab active" data-tab="overview">
+                        <i class="fa-solid fa-info-circle"></i> Přehled
+                    </button>
+                    <button class="modal-tab" data-tab="details">
+                        <i class="fa-solid fa-list"></i> Detaily
+                    </button>
+                    <button class="modal-tab" data-tab="strategies">
+                        <i class="fa-solid fa-chess"></i> Strategie
+                    </button>
+                    <button class="modal-tab" data-tab="advanced">
+                        <i class="fa-solid fa-cog"></i> Pokročilé
+                    </button>
+                </div>
+                <div class="modal-tab-content active" id="modalTabContent">
+                    <!-- Dynamic tab content -->
+                    <div class="loading-placeholder">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <p>Načítání detailních informací...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE JAVASCRIPT -->
+    <script>
+        // Placeholder pro DataRegistry - bude implementován v následující iteraci
+        window.DataRegistry = {
+            dinosaurs: {
+                carnivores: [],
+                herbivores: [],
+                omnivores: []
+            },
+            cache: {},
+            loadingStatus: {}
+        };
+
+        // Placeholder pro WikiApp - základní event listenery
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🦕 The Isle: Evrima Wiki inicializována');
+            
+            // Navigation event listeners
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.dataset.section;
+                    switchSection(section);
+                    
+                    // Update active nav link
+                    navLinks.forEach(nl => nl.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Modal close event listener
+            const modalClose = document.getElementById('modalClose');
+            const modal = document.getElementById('universalModal');
+            
+            modalClose.addEventListener('click', function() {
+                modal.classList.remove('show');
+            });
+            
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+            
+            // Filter button event listeners
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    applyFilter(filter);
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('universalSearch');
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                performSearch(query);
+            });
+            
+            // Initialize with playables section
+            switchSection('playables');
+        });
+        
+        // Placeholder functions - will be expanded in next iterations
+        function switchSection(sectionName) {
+            console.log(`Přepínání na sekci: ${sectionName}`);
+            
+            const loadingPlaceholder = document.getElementById('loadingPlaceholder');
+            const dynamicContent = document.getElementById('dynamicContent');
+            
+            // Show loading
+            loadingPlaceholder.classList.remove('hidden');
+            dynamicContent.classList.add('hidden');
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                loadingPlaceholder.classList.add('hidden');
+                dynamicContent.classList.remove('hidden');
+                
+                // Update content based on section
+                updateContentForSection(sectionName);
+                updateFiltersForSection(sectionName);
+            }, 500);
+        }
+        
+        function updateContentForSection(sectionName) {
+            const content = document.getElementById('dynamicContent');
+            
+            switch(sectionName) {
+                case 'playables':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-dragon"></i> Hratelné druhy</h2>
+                            <p>Připraveno pro 17 dinosauřích druhů</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Tato sekce bude obsahovat kompletní databázi všech hratelných dinosaurů</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'diet-food':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-leaf"></i> Strava & Jídlo</h2>
+                            <p>Nutriční systém, rostliny a AI zvířata</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Databáze rostlin, nutriční hodnoty a AI creatures</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'health-status':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-heart-pulse"></i> Zdraví & Statusy</h2>
+                            <p>Mutace, efekty a health systém</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Systém mutací, status efekty a mechaniky zdraví</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'group-play':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-users"></i> Skupinová hra</h2>
+                            <p>Pack dynamics, role a herd mechaniky</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Pack systém, officer role a skupinové bonusy</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'travel-world':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-map"></i> Cestování & Svět</h2>
+                            <p>Mapa Gateway, biomy a migrace</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Interaktivní mapa, POI a migrační systém</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'mechanics':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-gears"></i> Herní mechaniky</h2>
+                            <p>Growth, nesting, gore a survival systémy</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Růstové mechaniky, breeding a survival systémy</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'controls':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-keyboard"></i> Ovládání & Interface</h2>
+                            <p>Keybinds, calls a UI elementy</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Kompletní přehled ovládání a komunikačního systému</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'upcoming':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2><i class="fa-solid fa-sparkles"></i> Připravované & Spekulace</h2>
+                            <p>Budoucí druhy a plánované funkce</p>
+                            <div style="margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                                <h3>🚧 Ve vývoji</h3>
+                                <p>Roadmapa vývoje a komunitní wishlist</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                default:
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h2>Sekce ve vývoji</h2>
+                            <p>Tato sekce bude brzy dostupná</p>
+                        </div>
+                    `;
+            }
+        }
+        
+        function updateFiltersForSection(sectionName) {
+            const filterButtons = document.getElementById('filterButtons');
+            
+            // Update filters based on section
+            switch(sectionName) {
+                case 'playables':
+                    filterButtons.innerHTML = `
+                        <button class="filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-dragon"></i> Všichni
+                        </button>
+                        <button class="filter-btn carnivore" data-filter="carnivore">
+                            <i class="fa-solid fa-teeth"></i> Masožravci
+                        </button>
+                        <button class="filter-btn herbivore" data-filter="herbivore">
+                            <i class="fa-solid fa-leaf"></i> Býložravci
+                        </button>
+                        <button class="filter-btn omnivore" data-filter="omnivore">
+                            <i class="fa-solid fa-balance-scale"></i> Všežravci
+                        </button>
+                    `;
+                    break;
+                    
+                case 'diet-food':
+                    filterButtons.innerHTML = `
+                        <button class="filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-seedling"></i> Vše
+                        </button>
+                        <button class="filter-btn" data-filter="proteins">
+                            <i class="fa-solid fa-drumstick-bite"></i> Proteiny
+                        </button>
+                        <button class="filter-btn" data-filter="carbs">
+                            <i class="fa-solid fa-wheat-awn"></i> Sacharidy
+                        </button>
+                        <button class="filter-btn" data-filter="lipids">
+                            <i class="fa-solid fa-droplet"></i> Tuky
+                        </button>
+                    `;
+                    break;
+                    
+                case 'health-status':
+                    filterButtons.innerHTML = `
+                        <button class="filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-heart"></i> Vše
+                        </button>
+                        <button class="filter-btn" data-filter="positive">
+                            <i class="fa-solid fa-plus"></i> Pozitivní mutace
+                        </button>
+                        <button class="filter-btn" data-filter="negative">
+                            <i class="fa-solid fa-minus"></i> Negativní mutace
+                        </button>
+                        <button class="filter-btn" data-filter="effects">
+                            <i class="fa-solid fa-virus"></i> Status efekty
+                        </button>
+                    `;
+                    break;
+                    
+                case 'group-play':
+                    filterButtons.innerHTML = `
+                        <button class="filter-btn active" data-filter="all">
+                            <i class="fa-solid fa-users"></i> Vše
+                        </button>
+                        <button class="filter-btn" data-filter="pack">
+                            <i class="fa-solid fa-paw"></i> Pack dynamics
+                        </button>
+                        <button class="filter-btn" data-filter="herd">
+                            <i class="fa-solid fa-horse"></i> Herd behavior
+                        </button>
+                        <button class="filter-btn" data-filter="roles">
+                            <i class="fa-solid fa-crown"></i> Officer roles
+                        </button>
+                    `;
+                    break;
+                    
+                default:
+                    // Keep default filters
+                    break;
+            }
+            
+            // Re-attach event listeners
+            attachFilterListeners();
+        }
+        
+        function attachFilterListeners() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    applyFilter(filter);
+                });
+            });
+        }
+        
+        function applyFilter(filter) {
+            console.log(`Aplikuji filtr: ${filter}`);
+            // TODO: Implement filtering logic in next phase
+        }
+        
+        function performSearch(query) {
+            console.log(`Vyhledávám: ${query}`);
+            // TODO: Implement search logic in next phase
+        }
+        
+        // Modal tab switching
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-tab')) {
+                const tabs = document.querySelectorAll('.modal-tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // TODO: Switch tab content in next phase
+            }
+        });
+    </script>
+</body>
+</html>
