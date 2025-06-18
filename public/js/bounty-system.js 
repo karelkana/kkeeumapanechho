@@ -1,0 +1,524 @@
+// public/js/bounty-system.js - Frontend bounty systém
+
+class BountySystem {
+    constructor() {
+        this.bountyAreas = new Map(); // bountyId -> area element
+        this.userEconomy = null;
+        this.activeBounties = [];
+        this.GRID_SIZE = 300; // 300m čtverce
+        this.UPDATE_INTERVAL = 30000; // 30 sekund
+        
+        this.init();
+    }
+    
+    async init() {
+        console.log('🎯 Inicializace Bounty systému...');
+        
+        // Přidat CSS styly
+        this.addBountyStyles();
+        
+        // Načíst ekonomiku uživatele
+        if (window.appState && window.appState.user) {
+            await this.loadUserEconomy();
+        }
+        
+        // Pravidelná aktualizace
+        setInterval(() => {
+            this.updateBountyAreas();
+            if (window.appState && window.appState.user) {
+                this.loadUserEconomy();
+            }
+        }, this.UPDATE_INTERVAL);
+        
+        // Počáteční načtení
+        await this.updateBountyAreas();
+        
+        // Vyčištění každou hodinu
+        setInterval(() => {
+            this.cleanExpiredBounties();
+        }, 60 * 60 * 1000);
+        
+        console.log('✅ Bounty systém inicializován');
+    }
+    
+    // Přidání CSS stylů
+    addBountyStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Bounty oblasti na mapě */
+            .bounty-area {
+                position: absolute;
+                border: 3px solid;
+                border-radius: 8px;
+                pointer-events: auto;
+                cursor: pointer;
+                z-index: 15;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(1px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 12px;
+                color: white;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            }
+            
+            .bounty-area.auto {
+                border-color: #f44336;
+                background-color: rgba(244, 67, 54, 0.15);
+                animation: pulse-red 2s infinite;
+            }
+            
+            .bounty-area.manual {
+                border-color: #ffc107;
+                background-color: rgba(255, 193, 7, 0.15);
+            }
+            
+            .bounty-area.combined {
+                border-color: #9c27b0;
+                background-color: rgba(156, 39, 176, 0.15);
+                animation: pulse-purple 2s infinite;
+            }
+            
+            .bounty-area:hover {
+                transform: scale(1.05);
+                z-index: 25 !important;
+            }
+            
+            @keyframes pulse-red {
+                0%, 100% { 
+                    border-color: #f44336; 
+                    background-color: rgba(244, 67, 54, 0.15);
+                }
+                50% { 
+                    border-color: #ff8a80; 
+                    background-color: rgba(244, 67, 54, 0.25);
+                }
+            }
+            
+            @keyframes pulse-purple {
+                0%, 100% { 
+                    border-color: #9c27b0; 
+                    background-color: rgba(156, 39, 176, 0.15);
+                }
+                50% { 
+                    border-color: #ce93d8; 
+                    background-color: rgba(156, 39, 176, 0.25);
+                }
+            }
+            
+            /* Bounty panel */
+            .bounty-panel {
+                background-color: rgba(0, 0, 0, 0.2);
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }
+            
+            .bounty-panel h3 {
+                margin-top: 0;
+                margin-bottom: 15px;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+            }
+            
+            .bounty-panel h3 i {
+                margin-right: 8px;
+                color: #ffc107;
+            }
+            
+            .economy-display {
+                display: flex;
+                align-items: center;
+                background: linear-gradient(135deg, #ffc107, #ff8f00);
+                padding: 10px 15px;
+                border-radius: 5px;
+                margin-bottom: 15px;
+                color: white;
+                font-weight: bold;
+            }
+            
+            .economy-display i {
+                margin-right: 8px;
+                font-size: 18px;
+            }
+            
+            .bounty-list {
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            
+            .bounty-item {
+                padding: 8px 10px;
+                background-color: rgba(255, 255, 255, 0.05);
+                margin-bottom: 8px;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                position: relative;
+            }
+            
+            .bounty-item:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .bounty-item.auto {
+                border-left: 3px solid #f44336;
+            }
+            
+            .bounty-item.manual {
+                border-left: 3px solid #ffc107;
+            }
+            
+            .bounty-target {
+                font-weight: bold;
+                margin-bottom: 3px;
+            }
+            
+            .bounty-details {
+                font-size: 12px;
+                color: #aaa;
+            }
+            
+            .bounty-amount {
+                color: #ffc107;
+                font-weight: bold;
+            }
+            
+            .create-bounty-section {
+                margin-top: 15px;
+                padding: 10px;
+                background-color: rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+            }
+            
+            .create-bounty-form {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .create-bounty-select,
+            .create-bounty-input {
+                padding: 8px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                color: var(--text-color);
+                font-size: 14px;
+            }
+            
+            .create-bounty-btn {
+                padding: 8px 12px;
+                background-color: #ffc107;
+                color: black;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: background-color 0.2s;
+            }
+            
+            .create-bounty-btn:hover {
+                background-color: #ffb300;
+            }
+            
+            .create-bounty-btn:disabled {
+                background-color: #666;
+                color: #999;
+                cursor: not-allowed;
+            }
+            
+            .my-bounties-section {
+                margin-top: 15px;
+            }
+            
+            .my-bounty-item {
+                background-color: rgba(255, 193, 7, 0.1);
+                border-left: 3px solid #ffc107;
+            }
+            
+            .cancel-bounty-btn {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: none;
+                border: none;
+                color: #f44336;
+                cursor: pointer;
+                font-size: 12px;
+                padding: 2px 5px;
+            }
+            
+            .cancel-bounty-btn:hover {
+                background-color: rgba(244, 67, 54, 0.2);
+                border-radius: 3px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Načtení ekonomiky uživatele
+    async loadUserEconomy() {
+        try {
+            const response = await fetch('/api/bounty/economy', {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.userEconomy = data.economy;
+                this.updateEconomyDisplay();
+            }
+        } catch (error) {
+            console.error('Chyba při načítání ekonomiky:', error);
+        }
+    }
+    
+    // Aktualizace zobrazení ekonomiky
+    updateEconomyDisplay() {
+        if (!this.userEconomy) return;
+        
+        const pointsDisplay = document.getElementById('user-points');
+        if (pointsDisplay) {
+            pointsDisplay.textContent = this.userEconomy.points || 0;
+        }
+        
+        // Aktualizovat další ekonomické informace
+        const killstreakDisplay = document.getElementById('user-killstreak');
+        if (killstreakDisplay) {
+            killstreakDisplay.textContent = this.userEconomy.current_killstreak || 0;
+        }
+    }
+    
+    // Načtení aktivních bounty
+    async loadActiveBounties() {
+        try {
+            const response = await fetch('/api/bounty/active');
+            if (response.ok) {
+                const data = await response.json();
+                this.activeBounties = data.bounties || [];
+                this.updateBountiesList();
+                return this.activeBounties;
+            }
+        } catch (error) {
+            console.error('Chyba při načítání bounty:', error);
+        }
+        return [];
+    }
+    
+    // Aktualizace seznamu bounty
+    updateBountiesList() {
+        const container = document.getElementById('bounties-list');
+        if (!container) return;
+        
+        if (this.activeBounties.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #aaa; padding: 10px;">Žádná aktivní bounty</div>';
+            return;
+        }
+        
+        let html = '';
+        this.activeBounties.forEach(bounty => {
+            const typeClass = bounty.bounty_type;
+            const typeText = bounty.bounty_type === 'auto' ? 'Auto' : 'Manual';
+            
+            html += `
+                <div class="bounty-item ${typeClass}" onclick="window.bountySystem.centerOnBounty('${bounty.target_steam_id}')">
+                    <div class="bounty-target">${bounty.target_name}</div>
+                    <div class="bounty-details">
+                        <span class="bounty-amount">${bounty.current_bounty_amount} bodů</span>
+                        <span style="margin-left: 10px;">${typeText}</span>
+                        ${bounty.current_killstreak ? `<span style="margin-left: 10px;">🔥 ${bounty.current_killstreak}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // Centrování na bounty hráče
+    centerOnBounty(targetSteamId) {
+        const bounty = this.activeBounties.find(b => b.target_steam_id === targetSteamId);
+        if (!bounty) return;
+        
+        // Najít hráče v aktuálních datech
+        const players = window.playersData || [];
+        const player = players.find(p => p.steamId === targetSteamId);
+        
+        if (player && player.x && player.y) {
+            // Hráč je online - centrovat na přesnou pozici
+            if (typeof window.centerOnPlayer === 'function') {
+                window.centerOnPlayer(player);
+            }
+        } else {
+            // Hráč není online - ukázat pouze toast
+            if (typeof showToast === 'function') {
+                showToast(`${bounty.target_name} není momentálně online`, 'info');
+            }
+        }
+    }
+    
+    // === AREA SYSTEM ===
+    
+    // Aktualizace bounty oblastí na mapě
+    async updateBountyAreas() {
+        try {
+            const response = await fetch('/api/bounty/locations');
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            const bountyLocations = data.bountyLocations || [];
+            
+            // Vymazat staré oblasti
+            this.clearOldAreas(bountyLocations.map(b => b.bountyId));
+            
+            // Přidat/aktualizovat oblasti
+            bountyLocations.forEach(bounty => {
+                this.createOrUpdateBountyArea(bounty);
+            });
+            
+            console.log(`Aktualizováno ${bountyLocations.length} bounty oblastí`);
+            
+        } catch (error) {
+            console.error('Chyba při aktualizaci bounty oblastí:', error);
+        }
+    }
+    
+    // Vymazání starých oblastí
+    clearOldAreas(activeBountyIds) {
+        for (const [bountyId, areaElement] of this.bountyAreas) {
+            if (!activeBountyIds.includes(bountyId)) {
+                areaElement.remove();
+                this.bountyAreas.delete(bountyId);
+            }
+        }
+    }
+    
+    // Vytvoření nebo aktualizace bounty oblasti
+    createOrUpdateBountyArea(bounty) {
+        const markersContainer = document.getElementById('markers-container');
+        if (!markersContainer) return;
+        
+        let areaElement = this.bountyAreas.get(bounty.bountyId);
+        
+        if (!areaElement) {
+            areaElement = this.createBountyAreaElement(bounty);
+            markersContainer.appendChild(areaElement);
+            this.bountyAreas.set(bounty.bountyId, areaElement);
+        }
+        
+        // Aktualizace pozice
+        this.updateAreaPosition(areaElement, bounty);
+        
+        // Aktualizace obsahu
+        this.updateAreaContent(areaElement, bounty);
+    }
+    
+    // Vytvoření HTML elementu pro bounty oblast
+    createBountyAreaElement(bounty) {
+        const area = document.createElement('div');
+        area.className = `bounty-area ${bounty.bountyType}`;
+        area.dataset.bountyId = bounty.bountyId;
+        area.dataset.bountyType = bounty.bountyType;
+        
+        // Event listeners
+        area.addEventListener('mouseenter', (e) => this.showAreaTooltip(bounty, e));
+        area.addEventListener('mousemove', (e) => this.positionTooltip(e));
+        area.addEventListener('mouseleave', () => this.hideTooltip());
+        area.addEventListener('click', () => this.onAreaClick(bounty));
+        
+        return area;
+    }
+    
+    // Aktualizace pozice oblasti
+    updateAreaPosition(areaElement, bounty) {
+        const { pixelX, pixelY } = this.gameCoordinatesToPixels(
+            bounty.approximateX, 
+            bounty.approximateY
+        );
+        
+        const gridSize = this.getGridSizeInPixels();
+        
+        // Umístit střed oblasti na pixel pozici
+        areaElement.style.left = `${pixelX - gridSize.width/2}px`;
+        areaElement.style.top = `${pixelY - gridSize.height/2}px`;
+        areaElement.style.width = `${gridSize.width}px`;
+        areaElement.style.height = `${gridSize.height}px`;
+    }
+    
+    // Aktualizace obsahu oblasti
+    updateAreaContent(areaElement, bounty) {
+        areaElement.innerHTML = `
+            💰 ${bounty.bountyAmount}
+            ${bounty.killstreak > 0 ? `<br>🔥 ${bounty.killstreak}` : ''}
+        `;
+        
+        // Aktualizovat třídu podle typu
+        areaElement.className = `bounty-area ${bounty.bountyType}`;
+    }
+    
+    // Převod herních souřadnic na pixely (stejná logika jako positionMarker)
+    gameCoordinatesToPixels(gameX, gameY) {
+        const MAP_BOUNDS = {
+            minLat: -700000,
+            maxLat: 720000,
+            minLong: -720000,
+            maxLong: 700000
+        };
+        const MAP_SIZE = 620;
+        
+        function mapCoordinateToPixel(value, min, max, mapSize) {
+            const normalized = (value - min) / (max - min);
+            const clamped = Math.max(0, Math.min(1, normalized));
+            return clamped * mapSize;
+        }
+        
+        const pixelX = mapCoordinateToPixel(gameX, MAP_BOUNDS.minLat, MAP_BOUNDS.maxLat, MAP_SIZE);
+        const pixelY = mapCoordinateToPixel(gameY, MAP_BOUNDS.minLong, MAP_BOUNDS.maxLong, MAP_SIZE);
+        
+        return { pixelX, pixelY };
+    }
+    
+    // Velikost grid oblasti v pixelech
+    getGridSizeInPixels() {
+        const topLeft = this.gameCoordinatesToPixels(0, 0);
+        const bottomRight = this.gameCoordinatesToPixels(this.GRID_SIZE, this.GRID_SIZE);
+        
+        return {
+            width: Math.abs(bottomRight.pixelX - topLeft.pixelX),
+            height: Math.abs(bottomRight.pixelY - topLeft.pixelY)
+        };
+    }
+    
+    // Tooltip pro oblast
+    showAreaTooltip(bounty, event) {
+        const tooltip = document.getElementById('tooltip');
+        if (!tooltip) return;
+        
+        let tooltipHTML = `
+            <div class="tooltip-title">
+                🎯 Bounty: ${bounty.targetName}
+            </div>
+            <div>💰 Odměna: ${bounty.bountyAmount} bodů</div>
+            <div>📍 Oblast: ${bounty.areaName}</div>
+            <div>🎲 Typ: ${bounty.bountyType === 'auto' ? 'Automatické' : 'Manuální'}</div>
+            ${bounty.killstreak > 0 ? `<div>🔥 Killstreak: ${bounty.killstreak}</div>` : ''}
+        `;
+        
+        tooltip.innerHTML = tooltipHTML;
+        tooltip.style.opacity = '1';
+        this.positionTooltip(event);
+    }
+    
+    positionTooltip(event) {
+        const tooltip = document.getElementById('tooltip');
+        if (!tooltip) return;
+        
+        const mapContainer = document.getElementById('map-container');
+        const rect = mapContainer.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
