@@ -1,4 +1,4 @@
-// server.js - hlavní soubor backend aplikace s RCON cache
+// server.js - SKUTEČNĚ KOMPLETNÍ VERZE - ČÁST A
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
@@ -35,7 +35,8 @@ RCON_PASS=heslo
 SESSION_SECRET=jursky-masakr-secret
 STEAM_API_KEY=
 ADMIN_STEAM_IDS=
-APP_URL=http://jursky.karelkana.eu`;
+APP_URL=http://jursky.karelkana.eu
+WEBHOOK_TOKEN=discord-bot-webhook`;
     
     try {
         fs.writeFileSync(envPath, defaultEnvContent);
@@ -60,7 +61,7 @@ console.log(`📊 Kill stats JSON (PRIORITNÍ pro statistiky): ${fs.existsSync(K
 console.log(`⏱️ Playtime JSON: ${fs.existsSync(PLAYTIME_FILE) ? '✅ EXISTS' : '❌ MISSING'} - ${PLAYTIME_FILE}`);
 console.log(`🔥 Kill feed JSON (NEPOUŽÍVÁ SE): ${fs.existsSync(KILL_FEED_FILE) ? '⚠️ EXISTS' : '❌ MISSING'} - ${KILL_FEED_FILE}`);
 console.log(`🗄️ SQLite DB (JEDINÝ zdroj pro kill feed): ${fs.existsSync(KILLFEED_DB_PATH) ? '✅ EXISTS' : '❌ MISSING'} - ${KILLFEED_DB_PATH}`);
-console.log("🔄 STRATEGIE: JSON pro statistiky, SQLite pro kill feed");
+console.log("🔄 STRATEGIE: JSON pro statistiky, SQLite pro kill feed, bounty používá API killfeed");
 console.log("----------------------------------------------------");
 
 // Fallback hodnoty pro kritické proměnné
@@ -87,7 +88,8 @@ const session = require('express-session');
 const passport = require('passport');
 const SteamStrategy = require('passport-steam').Strategy;
 const EvrimaRCON = require('./gamercon-async');
-const friendsRouter = require('./api-routes/friends');
+
+// OPRAVENO - Správný import databázových služeb
 const { db, parsePermissions } = require('./services/database');
 
 // Debug proměnných pro RCON
@@ -123,8 +125,11 @@ if (!RCON_PASS) {
 }
 
 if (!STEAM_API_KEY) {
-    console.error("VAROVÁNÍ: STEAM_API_KEY není definováno v .env souboru");
+    console.error("❌ KRITICKÁ CHYBA: STEAM_API_KEY není definováno v .env souboru");
     console.error("Steam přihlášení nebude fungovat bez platného API klíče");
+    console.error("Získej API klíč na: https://steamcommunity.com/dev/apikey");
+    // Nepokračuj bez Steam API klíče
+    process.exit(1);
 }
 
 // Seznam admin Steam ID
@@ -133,6 +138,7 @@ const adminSteamIds = (ADMIN_STEAM_IDS || '').split(',').map(id => id.trim());
 // Konfigurace aplikace
 const app = express();
 const port = process.env.PORT || 7682;
+// server.js KOMPLETNÍ - ČÁST B (pokračování po části A)
 
 // Pomocné funkce pro databázi
 function queryDatabase(query, params = []) {
@@ -333,7 +339,7 @@ async function getStatsFromDatabase() {
     }
 }
 
-// Hlavní funkce pro kill feed - MUSÍ číst z SQLite databáze
+// OPRAVENO - Hlavní funkce pro kill feed s přidáním ID a Steam ID pro bounty systém
 async function getKillFeedFromDatabase(limit = 20) {
     try {
         console.log('Načítám kill feed z SQLite databáze (jediný zdroj)');
@@ -341,9 +347,9 @@ async function getKillFeedFromDatabase(limit = 20) {
         // Kill feed existuje pouze v SQLite databázi
         if (fs.existsSync(KILLFEED_DB_PATH)) {
             const kills = await queryDatabase(`
-                SELECT timestamp, killer_name as killer, killer_dino as killerDino, 
+                SELECT id, timestamp, killer_name as killer, killer_dino as killerDino, 
                        victim_name as victim, victim_dino as victimDino, is_natural_death as natural,
-                       created_at
+                       killer_id, victim_id, created_at
                 FROM kills 
                 ORDER BY created_at DESC 
                 LIMIT ?
@@ -380,7 +386,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/api/friends', friendsRouter);
 
 // Session konfigurace
 app.use(session({
@@ -395,38 +400,74 @@ app.use(session({
     }
 }));
 
-// Passport konfigurace
+// Passport konfigurace s detailním debuggingem
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Debug Steam strategy před vytvořením
+console.log('🔧 Konfigurace Steam Strategy:', {
+    returnURL: `${APP_URL}/auth/steam/return`,
+    realm: APP_URL,
+    hasApiKey: !!STEAM_API_KEY,
+    apiKeyLength: STEAM_API_KEY ? STEAM_API_KEY.length : 0
+});
 
 passport.use(new SteamStrategy({
     returnURL: `${APP_URL}/auth/steam/return`,
     realm: APP_URL,
     apiKey: STEAM_API_KEY
-}, (identifier, profile, done) => {
-    console.log('Steam autentizace úspěšná:', {
-        id: profile.id,
-        displayName: profile.displayName
-    });
-    
-    const steamId = profile.id;
-    const isAdmin = adminSteamIds.includes(steamId);
-    
-    profile.isAdmin = isAdmin;
-    console.log('Uživatelská role:', isAdmin ? 'admin' : 'běžný uživatel');
-    
-    return done(null, profile);
+}, async (identifier, profile, done) => {
+    try {
+        console.log('🔄 Steam strategy callback spuštěn');
+        console.log('📋 Identifier:', identifier);
+        console.log('📋 Profile data:', {
+            id: profile ? profile.id : 'missing',
+            displayName: profile ? profile.displayName : 'missing',
+            profileKeysCount: profile ? Object.keys(profile).length : 0
+        });
+        
+        if (!profile || !profile.id) {
+            console.error('❌ Chybí Steam profile data');
+            return done(new Error('Chybí Steam profile data'), null);
+        }
+        
+        const steamId = profile.id;
+        const isAdmin = adminSteamIds.includes(steamId);
+        
+        profile.isAdmin = isAdmin;
+        console.log('✅ Steam autentizace úspěšná:', {
+            id: profile.id,
+            displayName: profile.displayName,
+            isAdmin: isAdmin
+        });
+        
+        return done(null, profile);
+    } catch (error) {
+        console.error('❌ Chyba při zpracování Steam profilu:', error);
+        return done(error, null);
+    }
 }));
 
 passport.serializeUser((user, done) => {
-    console.log('Serializace uživatele:', user.id);
-    done(null, user);
+    try {
+        console.log('🔄 Serializace uživatele:', user.id);
+        done(null, user);
+    } catch (error) {
+        console.error('❌ Chyba při serializaci uživatele:', error);
+        done(error);
+    }
 });
 
 passport.deserializeUser((obj, done) => {
-    console.log('Deserializace uživatele');
-    done(null, obj);
+    try {
+        console.log('🔄 Deserializace uživatele:', obj ? obj.id : 'null');
+        done(null, obj);
+    } catch (error) {
+        console.error('❌ Chyba při deserializaci uživatele:', error);
+        done(error);
+    }
 });
+// server.js KOMPLETNÍ - ČÁST C (pokračování po části B)
 
 // Optimalizovaný RCON Manager s trvalým připojením a 2-minutovou cache
 class RconManager {
@@ -966,6 +1007,19 @@ class RconManager {
 
 // Vytvoření instance RCON manažeru
 const rconManager = new RconManager();
+// server.js KOMPLETNÍ - ČÁST D (pokračování po části C)
+
+// OPRAVENO - Inicializace bounty systému PO všech závislých službách
+let bountyService = null;
+setTimeout(async () => {
+    try {
+        const BountyService = require('./services/bounty');
+        bountyService = new BountyService();
+        console.log('✅ Bounty service inicializován s kill feed integrací');
+    } catch (error) {
+        console.error('❌ Chyba při inicializaci bounty service:', error);
+    }
+}, 3000); // Počkat 3 sekundy na inicializaci ostatních služeb
 
 // Middleware pro kontrolu přihlášení
 const ensureAuthenticated = (req, res, next) => {
@@ -997,7 +1051,80 @@ function requireAuth(req, res, next) {
     }
     next();
 }
+// NOVÉ - SPRÁVNÉ
+// Bounty active endpoint - OPRAVENÁ VERZE bez bountyService
+app.get('/api/bounty/active', async (req, res) => {
+    try {
+        const bountyDbPath = path.join(__dirname, 'data', 'bounty.db');
+        
+        // Zkontroluj, jestli databáze existuje
+        if (!fs.existsSync(bountyDbPath)) {
+            console.log('Bounty databáze neexistuje:', bountyDbPath);
+            return res.json({ success: true, bounties: [] });
+        }
+        
+        const db = new sqlite3.Database(bountyDbPath);
+        
+        db.all(
+            `SELECT * FROM bounties 
+             WHERE status = 'active' 
+             AND expires_at > datetime('now')
+             ORDER BY amount DESC`,
+            [],
+            (err, rows) => {
+                db.close();
+                
+                if (err) {
+                    console.error('Bounty DB error:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                
+                console.log(`📊 Nalezeno ${(rows || []).length} aktivních bounty`);
+                
+                res.json({
+                    success: true,
+                    bounties: (rows || []).map(bounty => ({
+                        id: bounty.id,
+                        target_steam_id: bounty.target_steam_id,
+                        target_name: bounty.target_name,
+                        amount: bounty.amount,
+                        placed_by_steam_id: bounty.placed_by_steam_id,
+                        placed_by_name: bounty.placed_by_name,
+                        expires_at: bounty.expires_at,
+                        created_at: bounty.created_at
+                    }))
+                });
+            }
+        );
+    } catch (error) {
+        console.error('Bounty active error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+// Bounty overview stats
+app.get('/api/bounty-overview', async (req, res) => {
+    try {
+        if (!bountyService) {
+            return res.status(503).json({ error: 'Bounty service není inicializován' });
+        }
 
+        const overview = await bountyService.getBountyOverview();
+        
+        res.json({
+            success: true,
+            totalPlayers: overview.totalPlayers,
+            totalBounty: overview.totalBounty,
+            averageBounty: Math.round(overview.averageBounty || 0),
+            maxBounty: overview.maxBounty,
+            minBounty: overview.minBounty,
+            totalSpent: overview.totalSpent || 0,
+            circulatingBounty: (overview.totalBounty || 0) - (overview.totalSpent || 0)
+        });
+    } catch (error) {
+        console.error('Bounty overview error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 // Middleware pro kontrolu JSON souborů
 app.use('/api/stats', (req, res, next) => {
     const jsonExists = fs.existsSync(KILL_STATS_FILE);
@@ -1018,18 +1145,228 @@ app.use('/api/stats', (req, res, next) => {
     next();
 });
 
-// Autentizační routy
+// Autentizační routy s lepším error handlingem
 app.get('/auth/steam', (req, res, next) => {
-    console.log('Zahájení Steam autentizace, redirect URL:', `${APP_URL}/auth/steam/return`);
-    next();
-}, passport.authenticate('steam'));
+    try {
+        console.log('🔄 Zahájení Steam autentizace, redirect URL:', `${APP_URL}/auth/steam/return`);
+        next();
+    } catch (error) {
+        console.error('❌ Chyba při zahájení Steam autentizace:', error);
+        res.status(500).json({ error: 'Chyba při zahájení autentizace' });
+    }
+}, passport.authenticate('steam', {
+    failureRedirect: '/?error=steam_auth_failed'
+}));
 
 app.get('/auth/steam/return', (req, res, next) => {
-    console.log('Steam callback obdržen, data:', req.query);
-    next();
-}, passport.authenticate('steam', { failureRedirect: '/' }), (req, res) => {
-    console.log('Uživatel úspěšně přihlášen:', req.user ? req.user.id : 'neznámý');
-    res.redirect('/');
+    try {
+        console.log('🔄 Steam callback obdržen, query keys:', Object.keys(req.query));
+        console.log('🔄 OpenID mode:', req.query['openid.mode']);
+        console.log('🔄 OpenID identity:', req.query['openid.identity']);
+        next();
+    } catch (error) {
+        console.error('❌ Chyba při zpracování Steam callback:', error);
+        res.redirect('/?error=callback_error');
+    }
+}, (req, res, next) => {
+    // Custom error handler pro passport authenticate
+    passport.authenticate('steam', (err, user, info) => {
+        console.log('🔄 Passport authenticate callback:', {
+            hasError: !!err,
+            hasUser: !!user,
+            hasInfo: !!info,
+            errorMessage: err ? err.message : null,
+            infoMessage: info ? JSON.stringify(info) : null
+        });
+        
+        if (err) {
+            console.error('❌ Passport authentication error:', err);
+            return res.redirect('/?error=passport_error&message=' + encodeURIComponent(err.message));
+        }
+        
+        if (!user) {
+            console.error('❌ Žádný uživatel vrácen z passport');
+            return res.redirect('/?error=no_user&info=' + encodeURIComponent(JSON.stringify(info)));
+        }
+        
+        // Manuální přihlášení uživatele
+        req.logIn(user, (loginErr) => {
+            if (loginErr) {
+                console.error('❌ Chyba při req.logIn:', loginErr);
+                return res.redirect('/?error=login_error&message=' + encodeURIComponent(loginErr.message));
+            }
+            
+            console.log('✅ Uživatel úspěšně přihlášen:', user.id);
+            res.redirect('/?login=success');
+        });
+    })(req, res, next);
+});
+
+// NOVÝ webhook endpoint pro Discord bot kill feed notifikace
+app.post('/webhook/kill', express.json(), (req, res) => {
+    try {
+        const { token, killData } = req.body;
+        
+        // Ověření tokenu (nastavit v .env jako WEBHOOK_TOKEN)
+        if (token !== process.env.WEBHOOK_TOKEN) {
+            console.warn('⚠️ Neplatný webhook token');
+            return res.status(401).json({ error: 'Neplatný token' });
+        }
+        
+        console.log('📡 Webhook kill obdržen:', killData);
+        
+        // Předat data bounty service pro okamžité zpracování
+        if (bountyService && killData && !killData.is_natural_death && !killData.natural) {
+            console.log('🎯 Předávám kill data bounty service');
+            bountyService.processKillForBounty(killData).catch(error => {
+                console.error('Chyba při zpracování webhook killu:', error);
+            });
+        } else {
+            console.log('⏭️ Přeskakuji webhook - bounty service není připraven nebo je to natural death');
+        }
+        
+        res.json({ success: true, message: 'Kill zpracován' });
+        
+    } catch (error) {
+        console.error('Chyba webhook kill:', error);
+        res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
+// Bounty API router - načte se až po inicializaci služby
+setTimeout(() => {
+    try {
+        const bountyRouter = require('./api-routes/bounty');
+        app.use('/api/bounty', bountyRouter);
+        console.log('✅ Bounty API router načten');
+    } catch (error) {
+        console.error('❌ Chyba při načítání Bounty API routeru:', error);
+    }
+}, 4000);
+
+// OPRAVENÝ kombinovaný endpoint pro zamezení RCON konfliktů
+app.get('/api/combined-data', async (req, res) => {
+    try {
+        console.log('📡 Combined-data endpoint volán');
+        
+        // Získat data hráčů
+        const result = await rconManager.getPlayerData();
+        const players = result.players || [];
+        
+        // NOVÉ - uložit data pro bounty systém
+        app.set('playersData', players);
+        
+        // Filtrovat data podle oprávnění (stejná logika jako v původním /api/playerlist)
+        const isAuthenticated = req.isAuthenticated();
+        const isAdmin = isAuthenticated && req.user && req.user.isAdmin;
+        const userId = isAuthenticated ? req.user.id : null;
+        
+        let friendPerms = {};
+        
+        if (isAuthenticated && userId) {
+            try {
+                const friendships = await new Promise((resolve, reject) => {
+                    db.all(`
+                        SELECT 
+                            CASE 
+                                WHEN user_id = ? THEN friend_id 
+                                ELSE user_id 
+                            END as friend_steam_id,
+                            CASE 
+                                WHEN user_id = ? THEN friend_permissions 
+                                ELSE user_permissions 
+                            END as friend_permissions
+                        FROM friends
+                        WHERE (user_id = ? OR friend_id = ?)
+                        AND status = 'accepted'
+                    `, [userId, userId, userId, userId], (err, rows) => {
+                        if (err) {
+                            console.error('Chyba při získávání přátel:', err);
+                            resolve([]);
+                        } else {
+                            resolve(rows || []);
+                        }
+                    });
+                });
+                
+                friendships.forEach(f => {
+                    friendPerms[f.friend_steam_id] = parsePermissions(f.friend_permissions);
+                });
+                
+            } catch (error) {
+                console.error('Chyba při získávání oprávnění přátel:', error);
+            }
+        }
+        
+        const playerInfo = players.map(player => {
+            const info = {
+                id: player.id,
+                name: player.name,
+                dino: player.dino,
+                dinoType: player.dinoType,
+                steamId: player.steamId,
+                growth: player.growth
+            };
+            
+            if (isAuthenticated) {
+                if (player.steamId === userId) {
+                    info.x = player.x;
+                    info.y = player.y;
+                    info.z = player.z;
+                    info.health = player.health;
+                    info.hunger = player.hunger;
+                    info.thirst = player.thirst;
+                    info.stamina = player.stamina;
+                }
+                else if (isAdmin) {
+                    info.x = player.x;
+                    info.y = player.y;
+                    info.z = player.z;
+                    info.health = player.health;
+                    info.hunger = player.hunger;
+                    info.thirst = player.thirst;
+                    info.stamina = player.stamina;
+                }
+                else if (friendPerms[player.steamId]) {
+                    const perms = friendPerms[player.steamId];
+                    
+                    if (perms.location) {
+                        info.x = player.x;
+                        info.y = player.y;
+                        info.z = player.z;
+                    }
+                    
+                    if (perms.stats) {
+                        info.health = player.health;
+                        info.hunger = player.hunger;
+                        info.thirst = player.thirst;
+                        info.stamina = player.stamina;
+                    }
+                }
+            }
+            
+            return info;
+        });
+        
+        console.log(`✅ Combined data: ${playerInfo.length} hráčů${result.fromCache ? ' (z cache)' : ''}`);
+        
+        res.json({ 
+            success: true, 
+            players: playerInfo,
+            auth: { isAuthenticated, isAdmin },
+            meta: {
+                fromCache: result.fromCache,
+                playerDataFromCache: result.fromCache,
+                playerCacheAge: result.cacheAge,
+                cacheValid: rconManager.isCacheValid(),
+                timestamp: new Date().toISOString()
+            }
+        });
+        
+    } catch (error) {
+        console.error('Chyba při combined-data:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // API endpointy s cache podporou
@@ -1061,6 +1398,7 @@ app.get('/api/test-database', async (req, res) => {
         const results = {
             json: { exists: false, working: false },
             sqlite: { exists: false, working: false },
+            bounty: { exists: false, working: false },
             paths: {
                 killStats: KILL_STATS_FILE,
                 killFeed: KILL_FEED_FILE,
@@ -1107,6 +1445,22 @@ app.get('/api/test-database', async (req, res) => {
             }
         }
         
+        // Test bounty systému
+        try {
+            if (bountyService) {
+                const activeBounties = await bountyService.getActiveBounties();
+                
+                results.bounty.working = true;
+                results.bounty.recordCounts = {
+                    activeBounties: activeBounties.length
+                };
+            } else {
+                results.bounty.error = 'Bounty service není inicializován';
+            }
+        } catch (error) {
+            results.bounty.error = error.message;
+        }
+        
         // Test aktuálních API
         try {
             const stats = await getStatsFromDatabase();
@@ -1126,7 +1480,7 @@ app.get('/api/test-database', async (req, res) => {
         
         res.json({
             success: true,
-            strategy: 'JSON pro statistiky, SQLite pro kill feed',
+            strategy: 'JSON pro statistiky, SQLite pro kill feed, bounty používá API killfeed',
             ...results
         });
     } catch (error) {
@@ -1222,11 +1576,22 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+// OPRAVENÝ API endpoint pro kill feed s dodatečnými daty pro bounty
 app.get('/api/killfeed', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 20;
         const kills = await getKillFeedFromDatabase(limit);
-        res.json({ kills });
+        
+        console.log(`📡 API killfeed: vráceno ${kills.length} killů`);
+        
+        res.json({ 
+            kills,
+            meta: {
+                total: kills.length,
+                playerKills: kills.filter(k => !k.natural).length,
+                naturalDeaths: kills.filter(k => k.natural).length
+            }
+        });
     } catch (error) {
         console.error('Chyba API /killfeed:', error);
         res.status(500).json({ error: 'Chyba serveru' });
@@ -1259,20 +1624,15 @@ app.get('/api/player-search', async (req, res) => {
 
 app.get('/api/player-stats', async (req, res) => {
     try {
-        const searchTerm = req.query.search;
-        if (!searchTerm) {
-            return res.status(400).json({ error: 'Chybí parametr search' });
+        const steamId = req.query.steamId;
+        if (!steamId) {
+            return res.status(400).json({ error: 'Chybí Steam ID' });
         }
 
-        const player = await searchPlayerInDatabase(searchTerm);
+        const player = await searchPlayerInDatabase(steamId);
         if (!player) {
             return res.status(404).json({ error: 'Hráč nenalezen' });
         }
-
-        const stats = await getStatsFromDatabase();
-        const allPlayers = stats.topKills;
-        const playerRank = allPlayers.findIndex(p => p.id === player.id) + 1;
-        player.rank = playerRank > 0 ? playerRank : null;
 
         res.json(player);
     } catch (error) {
@@ -1280,371 +1640,193 @@ app.get('/api/player-stats', async (req, res) => {
         res.status(500).json({ error: 'Chyba serveru' });
     }
 });
+// server.js KOMPLETNÍ - ČÁST E (finální část po části D)
 
-// AKTUALIZOVANÉ API endpointy s cache podporou
-app.get('/api/players', ensureAuthenticated, async (req, res) => {
-    try {
-        console.log(`API požadavek na hráče od uživatele: ${req.user.id}`);
-        
-        const result = await rconManager.getPlayerData();
-        let players = result.players;
-        
-        if (!req.user.isAdmin) {
-            console.log(`Filtrování dat pro běžného uživatele ${req.user.id}`);
-            players = players.filter(player => player.steamId === req.user.id);
-        }
-        
-        console.log(`Vracím ${players.length} hráčů${result.fromCache ? ' (z cache)' : ''}`);
-        res.json({ 
-            success: true, 
-            players,
-            meta: {
-                fromCache: result.fromCache,
-                cacheAge: result.cacheAge,
-                timestamp: new Date().toISOString()
-            }
-        });
-    } catch (error) {
-        console.error('Chyba při získávání dat o hráčích:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+// Statické soubory a SPA routing
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/api/playerlist', async (req, res) => {
-    try {
-        console.log('API požadavek na veřejný seznam hráčů');
-        
-        const result = await rconManager.getPlayerData();
-        const players = result.players;
-        
-        const isAuthenticated = req.isAuthenticated();
-        const isAdmin = isAuthenticated && req.user && req.user.isAdmin;
-        const userId = isAuthenticated ? req.user.id : null;
-        
-        console.log('Stav autentizace:', { isAuthenticated, isAdmin, userId });
-        
-        let friendPerms = {};
-        
-        if (isAuthenticated && userId) {
-            try {
-                const friendships = await new Promise((resolve, reject) => {
-                    db.all(`
-                        SELECT 
-                            CASE 
-                                WHEN user_id = ? THEN friend_id 
-                                ELSE user_id 
-                            END as friend_steam_id,
-                            CASE 
-                                WHEN user_id = ? THEN friend_permissions 
-                                ELSE user_permissions 
-                            END as friend_permissions
-                        FROM friends
-                        WHERE (user_id = ? OR friend_id = ?)
-                        AND status = 'accepted'
-                    `, [userId, userId, userId, userId], (err, rows) => {
-                        if (err) {
-                            console.error('Chyba při získávání přátel:', err);
-                            resolve([]);
-                        } else {
-                            resolve(rows || []);
-                        }
-                    });
-                });
-                
-                friendships.forEach(f => {
-                    friendPerms[f.friend_steam_id] = parsePermissions(f.friend_permissions);
-                });
-                
-                console.log(`Nalezeno ${friendships.length} přátelství pro uživatele ${userId}`);
-            } catch (error) {
-                console.error('Chyba při získávání oprávnění přátel:', error);
-            }
-        }
-        
-        const playerInfo = players.map(player => {
-            const info = {
-                id: player.id,
-                name: player.name,
-                dino: player.dino,
-                dinoType: player.dinoType,
-                steamId: player.steamId
-            };
-            
-            if (isAuthenticated) {
-                if (player.steamId === userId) {
-                    info.x = player.x;
-                    info.y = player.y;
-                    info.z = player.z;
-                    info.health = player.health;
-                    info.hunger = player.hunger;
-                    info.thirst = player.thirst;
-                    info.stamina = player.stamina;
-                    info.growth = player.growth;
-                }
-                else if (isAdmin) {
-                    info.x = player.x;
-                    info.y = player.y;
-                    info.z = player.z;
-                    info.health = player.health;
-                    info.hunger = player.hunger;
-                    info.thirst = player.thirst;
-                    info.stamina = player.stamina;
-                    info.growth = player.growth;
-                }
-                else if (friendPerms[player.steamId]) {
-                    const perms = friendPerms[player.steamId];
-                    
-                    if (perms.location) {
-                        info.x = player.x;
-                        info.y = player.y;
-                        info.z = player.z;
-                    }
-                    
-                    if (perms.stats) {
-                        info.health = player.health;
-                        info.hunger = player.hunger;
-                        info.thirst = player.thirst;
-                        info.stamina = player.stamina;
-                        info.growth = player.growth;
-                    }
-                }
-            }
-            
-            return info;
-        });
-        
-        const withCoords = playerInfo.filter(p => p.x !== undefined).length;
-        const withStats = playerInfo.filter(p => p.health !== undefined).length;
-        console.log(`Vracím info o ${playerInfo.length} hráčích, ${withCoords} se souřadnicemi, ${withStats} se statistikami${result.fromCache ? ' (z cache)' : ''}`);
-        
-        res.json({ 
-            success: true, 
-            players: playerInfo,
-            auth: { isAuthenticated, isAdmin },
-            meta: {
-                fromCache: result.fromCache,
-                cacheAge: result.cacheAge,
-                cacheValid: rconManager.isCacheValid(),
-                timestamp: new Date().toISOString()
-            }
-        });
-    } catch (error) {
-        console.error('Chyba při získávání seznamu hráčů:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+app.get('/stats', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'stats.html'));
 });
 
-// NOVÝ kombinovaný endpoint pro data hráčů bez serverInfo
-app.get('/api/combined-data', async (req, res) => {
-    try {
-        console.log('API požadavek na kombinovaná data (bez serverInfo)');
-        
-        const result = await rconManager.getPlayerData();
-        const players = result.players;
-        
-        const isAuthenticated = req.isAuthenticated();
-        const isAdmin = isAuthenticated && req.user && req.user.isAdmin;
-        const userId = isAuthenticated ? req.user.id : null;
-        
-        console.log('Stav autentizace:', { isAuthenticated, isAdmin, userId });
-        
-        let friendPerms = {};
-        
-        if (isAuthenticated && userId) {
-            try {
-                const friendships = await new Promise((resolve, reject) => {
-                    db.all(`
-                        SELECT 
-                            CASE 
-                                WHEN user_id = ? THEN friend_id 
-                                ELSE user_id 
-                            END as friend_steam_id,
-                            CASE 
-                                WHEN user_id = ? THEN friend_permissions 
-                                ELSE user_permissions 
-                            END as friend_permissions
-                        FROM friends
-                        WHERE (user_id = ? OR friend_id = ?)
-                        AND status = 'accepted'
-                    `, [userId, userId, userId, userId], (err, rows) => {
-                        if (err) {
-                            console.error('Chyba při získávání přátel:', err);
-                            resolve([]);
-                        } else {
-                            resolve(rows || []);
-                        }
-                    });
-                });
-                
-                friendships.forEach(f => {
-                    friendPerms[f.friend_steam_id] = parsePermissions(f.friend_permissions);
-                });
-                
-                console.log(`Nalezeno ${friendships.length} přátelství pro uživatele ${userId}`);
-            } catch (error) {
-                console.error('Chyba při získávání oprávnění přátel:', error);
-            }
-        }
-        
-        const playerInfo = players.map(player => {
-            const info = {
-                id: player.id,
-                name: player.name,
-                dino: player.dino,
-                dinoType: player.dinoType,
-                steamId: player.steamId,
-                growth: player.growth // Vždy posílat growth, frontend provede přepočet
-            };
-            
-            if (isAuthenticated) {
-                if (player.steamId === userId) {
-                    info.x = player.x;
-                    info.y = player.y;
-                    info.z = player.z;
-                    info.health = player.health;
-                    info.hunger = player.hunger;
-                    info.thirst = player.thirst;
-                    info.stamina = player.stamina;
-                }
-                else if (isAdmin) {
-                    info.x = player.x;
-                    info.y = player.y;
-                    info.z = player.z;
-                    info.health = player.health;
-                    info.hunger = player.hunger;
-                    info.thirst = player.thirst;
-                    info.stamina = player.stamina;
-                }
-                else if (friendPerms[player.steamId]) {
-                    const perms = friendPerms[player.steamId];
-                    
-                    if (perms.location) {
-                        info.x = player.x;
-                        info.y = player.y;
-                        info.z = player.z;
-                    }
-                    
-                    if (perms.stats) {
-                        info.health = player.health;
-                        info.hunger = player.hunger;
-                        info.thirst = player.thirst;
-                        info.stamina = player.stamina;
-                    }
-                }
-            }
-            
-            return info;
-        });
-        
-        const withCoords = playerInfo.filter(p => p.x !== undefined).length;
-        const withStats = playerInfo.filter(p => p.health !== undefined).length;
-        console.log(`Vracím info o ${playerInfo.length} hráčích, ${withCoords} se souřadnicemi, ${withStats} se statistikami${result.fromCache ? ' (z cache)' : ''}`);
-        
-        res.json({ 
-            success: true, 
-            players: playerInfo,
-            auth: { isAuthenticated, isAdmin },
-            meta: {
-                fromCache: result.fromCache,
-                playerDataFromCache: result.fromCache,
-                playerCacheAge: result.cacheAge,
-                cacheValid: rconManager.isCacheValid(),
-                timestamp: new Date().toISOString()
-            }
-        });
-    } catch (error) {
-        console.error('Chyba při získávání kombinovaných dat:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+app.get('/map', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/api/myplayer', ensureAuthenticated, async (req, res) => {
+app.get('/friends', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/bounty', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Friends router se načte zde, po inicializaci databáze
+try {
+    const friendsRouter = require('./api-routes/friends');
+    app.use('/api/friends', requireAuth, friendsRouter);
+    console.log('✅ Friends API router načten');
+} catch (error) {
+    console.error('❌ Chyba při načítání Friends API routeru:', error);
+}
+
+// Další API endpointy pro kompatibilitu
+app.get('/api/serverinfo', async (req, res) => {
     try {
-        console.log(`Požadavek na informace o přihlášeném hráči: ${req.user.id}`);
-        
-        const player = await rconManager.getPlayerInfoBySteamId(req.user.id);
-        
-        if (!player) {
-            return res.json({
-                success: false,
-                message: 'Hráč není na serveru'
-            });
-        }
-        
+        const result = await rconManager.getServerInfoData();
         res.json({
             success: true,
-            player: {
-                id: player.id,
-                name: player.name,
-                dino: player.dino,
-                dinoType: player.dinoType,
-                growth: player.growth,
-                steamId: player.steamId,
-                x: player.x,
-                y: player.y,
-                z: player.z,
-                health: player.health,
-                hunger: player.hunger,
-                thirst: player.thirst,
-                stamina: player.stamina
-            }
-        });
-    } catch (error) {
-        console.error('Chyba při získávání informací o hráči:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/server-info', async (req, res) => {
-    try {
-        console.log('API požadavek na informace o serveru');
-        const result = await rconManager.getServerInfoData();
-        
-        console.log(`Vracím informace o serveru${result.fromCache ? ' (z cache)' : ''}:`, result.serverInfo);
-        res.json({ 
-            success: true, 
             serverInfo: result.serverInfo,
-            meta: {
-                fromCache: result.fromCache,
-                timestamp: new Date().toISOString()
-            }
+            fromCache: result.fromCache,
+            connectionStatus: rconManager.getConnectionStatus()
         });
     } catch (error) {
-        console.error('Chyba při získávání informací o serveru:', error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error('Chyba API /serverinfo:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            serverInfo: rconManager.getDefaultServerInfo()
+        });
     }
 });
 
-app.get('/api/admin/players', ensureAdmin, async (req, res) => {
-    try {
-        console.log('Admin API požadavek na hráče');
-        const result = await rconManager.getPlayerData();
-        const players = result.players;
-        
-        console.log(`Admin: Vracím data o ${players.length} hráčích${result.fromCache ? ' (z cache)' : ''}`);
-        res.json({ 
-            success: true, 
-            players,
-            meta: {
-                fromCache: result.fromCache,
-                cacheAge: result.cacheAge,
-                cacheValid: rconManager.isCacheValid(),
-                timestamp: new Date().toISOString()
-            }
-        });
-    } catch (error) {
-        console.error('Chyba při získávání admin dat o hráčích:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// NOVÝ endpoint pro debug RCON stavu
-app.get('/api/rcon-status', async (req, res) => {
+app.get('/api/connection-status', (req, res) => {
     try {
         const status = rconManager.getConnectionStatus();
         res.json({
             success: true,
             status: status
+        });
+    } catch (error) {
+        console.error('Chyba API /connection-status:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// API endpoint pro admin reload
+app.post('/api/admin/reload-rcon', ensureAdmin, async (req, res) => {
+    try {
+        console.log('🔄 Admin reload RCON požadavek od:', req.user.displayName);
+        
+        await rconManager.close();
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Počkat 1 sekundu
+        
+        const connected = await rconManager.connect();
+        
+        res.json({
+            success: true,
+            message: 'RCON připojení restartováno',
+            connected: connected,
+            status: rconManager.getConnectionStatus()
+        });
+    } catch (error) {
+        console.error('Chyba při admin reload RCON:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// API endpoint pro manuální refresh player dat
+app.post('/api/admin/refresh-players', ensureAdmin, async (req, res) => {
+    try {
+        console.log('🔄 Admin refresh players požadavek od:', req.user.displayName);
+        
+        const result = await rconManager.getPlayerData();
+        
+        res.json({
+            success: true,
+            message: 'Data hráčů aktualizována',
+            players: result.players,
+            fromCache: result.fromCache,
+            cacheAge: result.cacheAge
+        });
+    } catch (error) {
+        console.error('Chyba při admin refresh players:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// API endpoint pro získání systémových informací
+app.get('/api/system-info', ensureAdmin, (req, res) => {
+    try {
+        const systemInfo = {
+            server: {
+                nodeVersion: process.version,
+                platform: process.platform,
+                arch: process.arch,
+                uptime: process.uptime(),
+                memoryUsage: process.memoryUsage(),
+                env: process.env.NODE_ENV || 'development'
+            },
+            rcon: rconManager.getConnectionStatus(),
+            database: {
+                killStatsExists: fs.existsSync(KILL_STATS_FILE),
+                playtimeExists: fs.existsSync(PLAYTIME_FILE),
+                killfeedDbExists: fs.existsSync(KILLFEED_DB_PATH)
+            },
+            bounty: {
+                serviceInitialized: !!bountyService,
+                timestamp: new Date().toISOString()
+            }
+        };
+        
+        res.json({
+            success: true,
+            systemInfo: systemInfo
+        });
+    } catch (error) {
+        console.error('Chyba API /system-info:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        rcon: {
+            connected: rconManager.connected,
+            cacheValid: rconManager.isCacheValid()
+        },
+        bounty: {
+            initialized: !!bountyService
+        }
+    };
+    
+    res.json(health);
+});
+
+// Metrics endpoint pro monitoring
+app.get('/api/metrics', (req, res) => {
+    try {
+        const metrics = {
+            server: {
+                uptime: process.uptime(),
+                memoryUsage: process.memoryUsage(),
+                cpuUsage: process.cpuUsage()
+            },
+            rcon: rconManager.getConnectionStatus(),
+            timestamp: new Date().toISOString()
+        };
+        
+        res.json({
+            success: true,
+            metrics: metrics
         });
     } catch (error) {
         res.status(500).json({
@@ -1654,86 +1836,182 @@ app.get('/api/rcon-status', async (req, res) => {
     }
 });
 
-app.post('/api/update-playtime', (req, res) => {
-    try {
-        const { steamId, playtime } = req.body;
-        
-        if (!steamId || playtime === undefined) {
-            return res.status(400).json({ error: 'Chybí steamId nebo playtime' });
-        }
-
-        const playtimeStats = readJsonFile(PLAYTIME_FILE, {});
-        playtimeStats[steamId] = parseInt(playtime);
-
-        if (writeJsonFile(PLAYTIME_FILE, playtimeStats)) {
-            res.json({ success: true });
-        } else {
-            res.status(500).json({ error: 'Chyba při ukládání' });
-        }
-
-    } catch (error) {
-        console.error('Chyba při aktualizaci playtime:', error);
-        res.status(500).json({ error: 'Chyba při aktualizaci playtime' });
-    }
+// Robots.txt
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+Sitemap: ${APP_URL}/sitemap.xml`);
 });
 
-app.post('/api/refresh-stats', requireAuth, (req, res) => {
-    try {
-        res.json({ 
-            success: true, 
-            message: 'Statistiky byly aktualizovány',
-            timestamp: new Date().toISOString()
+// Sitemap.xml pro SEO
+app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>${APP_URL}/</loc>
+        <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>${APP_URL}/stats</loc>
+        <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>${APP_URL}/map</loc>
+        <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+        <priority>0.8</priority>
+    </url>
+</urlset>`);
+});
+
+// SPA fallback - všechny ostatní routy
+app.get('*', (req, res) => {
+    // Zkontrolovat, zda požadavek není pro API endpoint
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+            success: false,
+            error: 'API endpoint nenalezen',
+            path: req.path
         });
-
-    } catch (error) {
-        console.error('Chyba při refresh statistik:', error);
-        res.status(500).json({ error: 'Chyba při refresh statistik' });
     }
-});
-
-app.get('/stats', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'stats.html'));
-});
-
-app.get('/', (req, res) => {
+    
+    // Pro všechny ostatní routy vrátit hlavní SPA soubor
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handlers
-app.use('/api/*', (err, req, res, next) => {
-    console.error('API Error:', err);
-    res.status(500).json({ 
-        error: 'Chyba serveru při načítání dat',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
+// Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server error:', err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Došlo k chybě serveru',
-        error: process.env.NODE_ENV === 'development' ? err.message : 'Interní chyba serveru'
+    console.error('Unhandled error:', err);
+    
+    // Log error details pro debugging
+    console.error('Error stack:', err.stack);
+    console.error('Request details:', {
+        method: req.method,
+        path: req.path,
+        query: req.query,
+        user: req.user ? req.user.id : 'anonymous',
+        timestamp: new Date().toISOString()
+    });
+    
+    res.status(500).json({ 
+        success: false, 
+        error: 'Vnitřní chyba serveru',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Chyba serveru',
+        timestamp: new Date().toISOString()
     });
 });
 
-console.log('API endpointy pro statistiky inicializovány');
+// 404 handler pro neexistující routy
+app.use((req, res) => {
+    console.log(`404 - Neexistující route: ${req.method} ${req.path}`);
+    
+    if (req.path.startsWith('/api/')) {
+        res.status(404).json({
+            success: false,
+            error: 'API endpoint nenalezen',
+            path: req.path,
+            availableEndpoints: [
+                '/api/user', '/api/stats', '/api/killfeed', '/api/combined-data',
+                '/api/friends/*', '/api/bounty/*', '/api/test-database', '/api/test-rcon'
+            ]
+        });
+    } else {
+        res.status(404).sendFile(path.join(__dirname, 'public', '404.html'), (err) => {
+            if (err) {
+                res.status(404).send('404 - Stránka nenalezena');
+            }
+        });
+    }
+});
+
+// Graceful shutdown handlers
+async function gracefulShutdown(signal) {
+    console.log(`\n🛑 Přijat ${signal} signal. Ukončuji server...`);
+    
+    try {
+        // Uzavřít RCON připojení
+        await rconManager.close();
+        console.log('✅ RCON připojení uzavřeno');
+    } catch (error) {
+        console.error('⚠️ Chyba při uzavírání RCON:', error);
+    }
+    
+    try {
+        // Uzavřít hlavní databázi
+        if (db) {
+            db.close();
+            console.log('✅ Hlavní databáze uzavřena');
+        }
+    } catch (error) {
+        console.error('⚠️ Chyba při uzavírání hlavní databáze:', error);
+    }
+    
+    try {
+        // Uzavřít bounty databázi
+        if (bountyService && bountyService.db) {
+            bountyService.db.close();
+            console.log('✅ Bounty databáze uzavřena');
+        }
+    } catch (error) {
+        console.error('⚠️ Chyba při uzavírání bounty databáze:', error);
+    }
+    
+    console.log('👋 Server ukončen');
+    process.exit(0);
+}
+
+// Registrace signal handlers
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// Uncaught exception handler
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+    console.error('Stack:', err.stack);
+    
+    // Pokusit se o graceful shutdown
+    gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+// Unhandled promise rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    
+    // Pokusit se o graceful shutdown
+    gracefulShutdown('UNHANDLED_REJECTION');
+});
 
 // Spuštění serveru
 const server = app.listen(port, () => {
-    console.log(`Server běží na portu ${port}`);
-    console.log(`Aplikace je dostupná na: ${APP_URL}`);
+    console.log('🎉 ===== SERVER ÚSPĚŠNĚ SPUŠTĚN =====');
+    console.log(`🚀 Server běží na portu ${port}`);
+    console.log(`🌐 Aplikace dostupná na: ${APP_URL}`);
+    console.log(`🔗 Steam autentizace: ${APP_URL}/auth/steam`);
+    console.log(`📊 API test databáze: ${APP_URL}/api/test-database`);
+    console.log(`🎯 RCON test: ${APP_URL}/api/test-rcon`);
+    console.log(`💰 Bounty webhook: ${APP_URL}/webhook/kill`);
+    console.log(`❤️ Health check: ${APP_URL}/health`);
+    console.log(`📈 Metrics: ${APP_URL}/api/metrics`);
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 Development mode - dodatečné logy zapnuty');
+        console.log(`🐛 System info: ${APP_URL}/api/system-info`);
+    }
+    
+    console.log('=====================================');
 });
 
-// Graceful shutdown
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+// Server timeout nastavení
+server.timeout = 30000; // 30 sekund timeout
 
-async function shutdown() {
-    console.log('Ukončování serveru...');
-    await rconManager.close();
-    server.close(() => {
-        console.log('Server ukončen');
-        process.exit(0);
-    });
-}
+// Keep-alive nastavení
+server.keepAliveTimeout = 65000; // 65 sekund
+server.headersTimeout = 66000; // 66 sekund
+
+console.log('✅ Server.js načten úspěšně - s bounty a friends integrací');
+console.log('🔥 KOMPLETNÍ VERZE - všechny funkce aktivní');
+console.log(`📦 Celkem řádků kódu: ${__filename ? require('fs').readFileSync(__filename, 'utf8').split('\n').length : 'N/A'}`);
+console.log('🎯 Ready for production!');

@@ -1,10 +1,16 @@
-// api-routes/friends.js - Kompletní API pro správu přátel s user managementem
+// api-routes/friends.js - OPRAVENÉ API pro správu přátel
 const express = require('express');
 const router = express.Router();
-const { db, parsePermissions, getUserBySteamId, searchUsersByName } = require('../services/database');
+const { 
+    db, 
+    parsePermissions, 
+    getUserBySteamId, 
+    searchUsersByName,
+    createOrUpdateUser  // OPRAVENO - správný import
+} = require('../services/database');
 
-// Middleware pro kontrolu přihlášení
-const requireAuth = (req, res, next) => {
+// OPRAVENÝ Middleware pro kontrolu přihlášení + automatické ukládání uživatele
+const requireAuth = async (req, res, next) => {
     if (!req.user || !req.user.id) {
         console.log('🚫 Nepřihlášený pokus o přístup k friends API:', {
             hasUser: !!req.user,
@@ -21,6 +27,20 @@ const requireAuth = (req, res, next) => {
     }
     
     console.log(`👤 Auth OK pro friends API: ${req.user.displayName} (${req.user.id})`);
+    
+    // OPRAVENO - Správné volání createOrUpdateUser s objektem userData
+    try {
+        await createOrUpdateUser({
+            id: req.user.id,  // Steam ID
+            displayName: req.user.displayName || req.user.name || `Player ${req.user.id}`,
+            photos: req.user.photos || []  // Celý photos array
+        });
+        console.log(`✅ Uživatel ${req.user.displayName} aktualizován v databázi`);
+    } catch (error) {
+        console.warn('⚠️ Chyba při ukládání uživatele do databáze:', error.message);
+        // Nepřerušujeme požadavek kvůli této chybě, ale logujeme ji
+    }
+    
     next();
 };
 
@@ -28,17 +48,6 @@ const requireAuth = (req, res, next) => {
 const serializePermissions = (permissions) => {
     const perms = permissions || { location: true, stats: false };
     return JSON.stringify(perms);
-};
-
-// Pomocná funkce pro získání jména uživatele
-const getUserDisplayName = async (steamId) => {
-    try {
-        const user = await getUserBySteamId(steamId);
-        return user ? user.display_name : `Player ${steamId}`;
-    } catch (error) {
-        console.error('Chyba při získávání jména uživatele:', error);
-        return `Player ${steamId}`;
-    }
 };
 
 // GET /api/friends/friends - Načtení všech přátel a žádostí
@@ -166,13 +175,17 @@ router.get('/friends', requireAuth, (req, res) => {
     });
 });
 
-// POST /api/friends/request - Odeslání žádosti o přátelství
+// POST /api/friends/request - OPRAVENÉ odeslání žádosti o přátelství
 router.post('/request', requireAuth, async (req, res) => {
     const userId = req.user.id;
     const userName = req.user.displayName || `Player ${userId}`;
     const { friendId, shareLocation = true, shareStats = false } = req.body;
     
+    console.log(`📤 OPRAVENO - Odesílám žádost o přátelství: ${userName} (${userId}) -> ${friendId}`);
+    console.log('📋 Request body:', { friendId, shareLocation, shareStats });
+    
     if (!friendId) {
+        console.error('❌ Chybí friendId');
         return res.status(400).json({ 
             success: false, 
             error: 'Chybí friendId (Steam ID cílového uživatele)' 
@@ -180,22 +193,20 @@ router.post('/request', requireAuth, async (req, res) => {
     }
     
     if (friendId === userId) {
+        console.error('❌ Pokus o přidání sebe');
         return res.status(400).json({ 
             success: false, 
             error: 'Nemůžete přidat sebe jako přítele' 
         });
     }
     
-    console.log(`📤 Odesílám žádost o přátelství: ${userName} (${userId}) -> ${friendId}`);
-    
     try {
-        // Ověřit, že cílový uživatel existuje v našé databázi
+        // OPRAVENO - Ověřit, že cílový uživatel existuje v naší databázi
+        console.log(`🔍 Hledám cílového uživatele: ${friendId}`);
         const targetUser = await getUserBySteamId(friendId);
         const targetName = targetUser ? targetUser.display_name : `Player ${friendId}`;
         
-        if (!targetUser) {
-            console.log(`⚠️ Cílový uživatel ${friendId} neexistuje v databázi, ale pokračuji`);
-        }
+        console.log(`👤 Cílový uživatel: ${targetName} (${targetUser ? 'existuje' : 'neexistuje v DB'})`);
         
         // Kontrola, zda už žádost nebo přátelství neexistuje
         db.get(`
@@ -211,6 +222,7 @@ router.post('/request', requireAuth, async (req, res) => {
             }
             
             if (existing) {
+                console.warn(`⚠️ Existující vztah nalezen: status=${existing.status}`);
                 if (existing.status === 'accepted') {
                     return res.status(400).json({ 
                         success: false, 
@@ -227,6 +239,11 @@ router.post('/request', requireAuth, async (req, res) => {
             const userPermissions = serializePermissions({ location: shareLocation, stats: shareStats });
             const friendPermissions = serializePermissions({ location: true, stats: false }); // Výchozí pro přítele
             
+            console.log(`💾 Vytvářím žádost s permissions:`, {
+                userPermissions,
+                friendPermissions
+            });
+            
             // Vytvoření nové žádosti
             db.run(`
                 INSERT INTO friends (
@@ -238,7 +255,8 @@ router.post('/request', requireAuth, async (req, res) => {
                     console.error('❌ Chyba při vytváření žádosti o přátelství:', err);
                     return res.status(500).json({ 
                         success: false, 
-                        error: 'Chyba při odesílání žádosti' 
+                        error: 'Chyba při odesílání žádosti',
+                        details: err.message
                     });
                 }
                 
@@ -261,7 +279,8 @@ router.post('/request', requireAuth, async (req, res) => {
         console.error('❌ Chyba při zpracování žádosti o přátelství:', error);
         res.status(500).json({
             success: false,
-            error: 'Chyba při zpracování žádosti'
+            error: 'Chyba při zpracování žádosti',
+            details: error.message
         });
     }
 });
@@ -548,6 +567,7 @@ router.get('/search', requireAuth, async (req, res) => {
         const currentUserId = req.user.id;
         console.log(`🔍 Vyhledávání uživatelů pro ${req.user.displayName}: "${searchTerm}"`);
         
+        // Použít funkci ze services/database
         const users = await searchUsersByName(searchTerm.trim(), Math.min(parseInt(limit), 20));
         
         // Získat seznam již existujících vztahů

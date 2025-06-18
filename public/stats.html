@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jurský Masakr - Statistiky</title>
+    <title>Jurský Masakr - Statistiky & Bounty</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -21,6 +21,9 @@
             --herbivore-color: #4CAF50;
             --other-color: #2196F3;
             --friend-color: #9c27b0;
+            --bounty-color: #ff6b35;
+            --bounty-color-dark: #e55a2b;
+            --gold-color: #FFD700;
         }
 
         body {
@@ -115,10 +118,166 @@
             color: var(--accent-color);
         }
 
+        /* Bounty specifické styly */
+        .bounty-panel {
+            background: linear-gradient(135deg, var(--bounty-color), var(--bounty-color-dark));
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .bounty-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .bounty-panel h3 i {
+            margin-right: 8px;
+            color: var(--gold-color);
+        }
+
+        .bounty-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bounty-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .bounty-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            color: var(--gold-color);
+        }
+
+        .bounty-stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        .bounty-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bounty-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .bounty-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .bounty-btn.primary {
+            background-color: var(--gold-color);
+            color: var(--secondary-color);
+        }
+
+        .bounty-btn.primary:hover {
+            background-color: #E6C200;
+        }
+
+        .active-bounties {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .bounty-item {
+            padding: 10px;
+            border-left: 3px solid var(--bounty-color);
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .bounty-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .bounty-item.my-bounty {
+            border-left-color: var(--gold-color);
+        }
+
+        .bounty-item.target-me {
+            border-left-color: var(--error-color);
+        }
+
+        .bounty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .bounty-target {
+            font-weight: bold;
+            color: var(--bounty-color);
+        }
+
+        .bounty-amount {
+            color: var(--gold-color);
+            font-weight: bold;
+        }
+
+        .bounty-details {
+            font-size: 11px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bounty-actions-small {
+            margin-top: 5px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .bounty-actions-small button {
+            padding: 3px 8px;
+            font-size: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .bounty-cancel-btn {
+            background-color: var(--error-color);
+        }
+
+        .bounty-cancel-btn:hover {
+            background-color: #d32f2f;
+        }
+
         .tab-buttons {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .tab-button {
@@ -132,6 +291,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
         }
 
         .tab-button:hover {
@@ -141,6 +301,15 @@
         .tab-button.active {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
+        }
+
+        .tab-button.bounty-tab {
+            background-color: var(--bounty-color);
+            border-color: var(--bounty-color);
+        }
+
+        .tab-button.bounty-tab:hover {
+            background-color: var(--bounty-color-dark);
         }
 
         .tab-content {
@@ -352,37 +521,8 @@
             gap: 10px;
         }
 
-        .refresh-control {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .refresh-control button {
-            margin-left: 10px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            background-color: var(--accent-color);
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .refresh-control button:hover {
-            background-color: var(--accent-color-dark);
-        }
-
-        .refresh-control button i {
-            margin-right: 5px;
+        .leaderboard-card.bounty-card h4 {
+            color: var(--bounty-color);
         }
 
         .toast-container {
@@ -419,6 +559,10 @@
 
         .toast.info {
             background-color: var(--highlight-color);
+        }
+
+        .toast.bounty {
+            background-color: var(--bounty-color);
         }
 
         @keyframes slideIn {
@@ -493,6 +637,69 @@
             cursor: not-allowed;
         }
 
+        /* Bounty Dialog Styles */
+        .bounty-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            display: none;
+        }
+
+        .bounty-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--bounty-color);
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .dialog-buttons button {
+            flex: 1;
+            margin: 0 5px;
+        }
+
         @media screen and (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -512,12 +719,22 @@
             .overview-grid {
                 grid-template-columns: 1fr;
             }
+
+            .tab-buttons {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <h1><i class="fa-solid fa-dragon"></i> Jurský Masakr - Statistiky</h1>
+        <h1><i class="fa-solid fa-dragon"></i> Jurský Masakr - Statistiky & Bounty</h1>
         <div class="nav-links">
             <a href="/"><i class="fa-solid fa-map"></i> Mapa</a>
             <a href="/stats" class="active"><i class="fa-solid fa-chart-bar"></i> Statistiky</a>
@@ -557,6 +774,47 @@
                 </div>
             </div>
 
+            <!-- Bounty Panel -->
+            <div class="bounty-panel" id="bounty-panel" style="display: none;">
+                <h3><i class="fa-solid fa-crosshairs"></i> Můj Bounty systém</h3>
+                <div class="bounty-stats">
+                    <div class="bounty-stat">
+                        <span class="bounty-stat-value" id="user-points">0</span>
+                        <div class="bounty-stat-label">Body</div>
+                    </div>
+                    <div class="bounty-stat">
+                        <span class="bounty-stat-value" id="user-bounties-placed">0</span>
+                        <div class="bounty-stat-label">Vyhlášené</div>
+                    </div>
+                    <div class="bounty-stat">
+                        <span class="bounty-stat-value" id="user-bounties-completed">0</span>
+                        <div class="bounty-stat-label">Splněné</div>
+                    </div>
+                    <div class="bounty-stat">
+                        <span class="bounty-stat-value" id="user-bounty-on-me">0</span>
+                        <div class="bounty-stat-label">Na mě</div>
+                    </div>
+                </div>
+                <div class="bounty-actions">
+                    <button class="bounty-btn primary" id="create-bounty-btn">
+                        <i class="fa-solid fa-plus"></i> Vyhlásit
+                    </button>
+                    <button class="bounty-btn" id="view-my-bounties-btn">
+                        <i class="fa-solid fa-list"></i> Moje
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aktivní Bounty -->
+            <div class="stats-panel">
+                <h3><i class="fa-solid fa-crosshairs"></i> Aktivní Bounty <span id="bounty-count">(0)</span></h3>
+                <div class="active-bounties" id="active-bounties">
+                    <div class="loading">
+                        <i class="fa-solid fa-spinner"></i> Načítání...
+                    </div>
+                </div>
+            </div>
+
             <!-- Hledání hráče -->
             <div class="stats-panel">
                 <h3><i class="fa-solid fa-search"></i> Hledat hráče</h3>
@@ -582,10 +840,6 @@
         </div>
 
         <div class="main-content">
-            <div class="refresh-control">
-                </button>
-            </div>
-
             <!-- Přehled serveru -->
             <div class="overview-grid">
                 <div class="overview-card">
@@ -623,13 +877,26 @@
                 <button class="tab-button" onclick="showTab('dinos')">
                     <i class="fa-solid fa-dragon"></i> Top Dinosauři
                 </button>
+                <button class="tab-button bounty-tab" onclick="showTab('bounty-leaderboard')">
+                    <i class="fa-solid fa-trophy"></i> Bounty žebříček
+                </button>
             </div>
 
             <!-- Obsah žebříčků -->
             <div class="leaderboard-grid">
-                <div class="leaderboard-card">
+                <div class="leaderboard-card" id="main-leaderboard-card">
                     <h4 id="leaderboard-title"><i class="fa-solid fa-sword"></i> Top 10 - Zabití</h4>
                     <div id="leaderboard-content">
+                        <div class="loading">
+                            <i class="fa-solid fa-spinner"></i> Načítání...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bounty Leaderboard Card (zobrazí se pouze při aktivním bounty tabu) -->
+                <div class="leaderboard-card bounty-card" id="bounty-leaderboard-card" style="display: none;">
+                    <h4><i class="fa-solid fa-coins"></i> Top 10 - Body</h4>
+                    <div id="bounty-leaderboard-content">
                         <div class="loading">
                             <i class="fa-solid fa-spinner"></i> Načítání...
                         </div>
@@ -639,11 +906,39 @@
         </div>
     </div>
 
+    <!-- Bounty Create Dialog -->
+    <div class="bounty-dialog-overlay" id="bounty-dialog-overlay"></div>
+    <div class="bounty-dialog" id="bounty-dialog">
+        <h3><i class="fa-solid fa-crosshairs"></i> Vyhlásit Bounty</h3>
+        <form id="bounty-form">
+            <div class="form-group">
+                <label for="bounty-target">Cílový hráč</label>
+                <select id="bounty-target" required>
+                    <option value="">Vyberte hráče...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="bounty-amount">Odměna (body)</label>
+                <input type="number" id="bounty-amount" min="100" max="10000" step="50" required>
+                <small style="color: #aaa; font-size: 12px;">Minimum: 100 bodů, Maximum: 10,000 bodů</small>
+            </div>
+            <div class="dialog-buttons">
+                <button type="button" id="bounty-cancel-btn">
+                    <i class="fa-solid fa-times"></i> Zrušit
+                </button>
+                <button type="submit" id="bounty-submit-btn" class="bounty-btn primary">
+                    <i class="fa-solid fa-crosshairs"></i> Vyhlásit
+                </button>
+            </div>
+        </form>
+    </div>
+
     <div class="toast-container" id="toast-container"></div>
 
     <script>
         let currentUser = null;
         let statsData = {};
+        let bountyData = {};
         let currentTab = 'kills';
 
         // Inicializace
@@ -660,59 +955,40 @@
                     searchPlayer();
                 }
             });
+
+            // Bounty event listeners
+            setupBountyEventListeners();
         });
-// Aktualizace hledání hráče - upravit podle struktury dat z KillFeed databáze
-async function searchPlayer() {
-    const searchTerm = document.getElementById('search-input').value.trim();
-    const resultsDiv = document.getElementById('search-results');
 
-    if (!searchTerm) {
-        showToast('Zadejte jméno hráče nebo Steam ID', 'error');
-        return;
-    }
+        // Setup Bounty Event Listeners
+        function setupBountyEventListeners() {
+            const createBountyBtn = document.getElementById('create-bounty-btn');
+            const viewMyBountiesBtn = document.getElementById('view-my-bounties-btn');
+            const bountyDialogOverlay = document.getElementById('bounty-dialog-overlay');
+            const bountyCancelBtn = document.getElementById('bounty-cancel-btn');
+            const bountyForm = document.getElementById('bounty-form');
 
-    try {
-        const response = await fetch(`/api/player-search?search=${encodeURIComponent(searchTerm)}`);
-        if (!response.ok) throw new Error('Hráč nenalezen');
+            if (createBountyBtn) {
+                createBountyBtn.addEventListener('click', showCreateBountyDialog);
+            }
 
-        const playerData = await response.json();
-        
-        resultsDiv.innerHTML = `
-            <div class="stats-panel">
-                <h4><i class="fa-solid fa-user"></i> ${playerData.name}</h4>
-                <div class="user-stats-grid">
-                    <div class="user-stat">
-                        <span class="user-stat-value">${playerData.kills || 0}</span>
-                        <div class="user-stat-label">Zabití</div>
-                    </div>
-                    <div class="user-stat">
-                        <span class="user-stat-value">${playerData.deaths || 0}</span>
-                        <div class="user-stat-label">Smrti</div>
-                    </div>
-                    <div class="user-stat">
-                        <span class="user-stat-value">${(playerData.kd || 0).toFixed(2)}</span>
-                        <div class="user-stat-label">K/D Ratio</div>
-                    </div>
-                    <div class="user-stat">
-                        <span class="user-stat-value">${playerData.streak || 0}</span>
-                        <div class="user-stat-label">Current Streak</div>
-                    </div>
-                    <div class="user-stat">
-                        <span class="user-stat-value">${playerData.bestStreak || 0}</span>
-                        <div class="user-stat-label">Best Streak</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        resultsDiv.innerHTML = `
-            <div class="no-data">
-                <i class="fa-solid fa-exclamation-triangle"></i>
-                Hráč "${searchTerm}" nebyl nalezen
-            </div>
-        `;
-    }
-}
+            if (viewMyBountiesBtn) {
+                viewMyBountiesBtn.addEventListener('click', showMyBounties);
+            }
+
+            if (bountyDialogOverlay) {
+                bountyDialogOverlay.addEventListener('click', hideBountyDialog);
+            }
+
+            if (bountyCancelBtn) {
+                bountyCancelBtn.addEventListener('click', hideBountyDialog);
+            }
+
+            if (bountyForm) {
+                bountyForm.addEventListener('submit', handleBountySubmit);
+            }
+        }
+
         // Kontrola přihlášeného uživatele
         async function checkUser() {
             try {
@@ -722,6 +998,8 @@ async function searchPlayer() {
                     currentUser = data.user;
                     if (currentUser) {
                         document.getElementById('user-stats').style.display = 'block';
+                        document.getElementById('bounty-panel').style.display = 'block';
+                        loadBountyData();
                     }
                 }
             } catch (error) {
@@ -749,24 +1027,317 @@ async function searchPlayer() {
                     updateKillFeed(killData.kills || []);
                 }
 
+                // Načíst bounty data
+                await loadBountyData();
                 updateLastUpdate();
             } catch (error) {
                 console.error('Chyba při načítání dat:', error);
             }
         }
 
-        // Refresh dat
-        async function refreshData() {
-            const btn = document.getElementById('refresh-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Aktualizuji...';
-            btn.disabled = true;
+        // Načtení Bounty dat
+        async function loadBountyData() {
+            if (!currentUser) return;
 
-            await loadData();
-            showToast('Data byla aktualizována!');
+            try {
+                const [activeBountiesResponse, userEconomyResponse, leaderboardResponse] = await Promise.all([
+                    fetch('/api/bounty/active'),
+                    fetch('/api/bounty/economy'),
+                    fetch('/api/bounty/leaderboard')
+                ]);
 
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+                if (activeBountiesResponse.ok) {
+                    const activeBountiesData = await activeBountiesResponse.json();
+                    bountyData.activeBounties = activeBountiesData.bounties || [];
+                    updateActiveBounties();
+                }
+
+                if (userEconomyResponse.ok) {
+                    const economyData = await userEconomyResponse.json();
+                    bountyData.userEconomy = economyData.economy || {};
+                    updateUserBountyStats();
+                }
+
+                if (leaderboardResponse.ok) {
+                    const leaderboardData = await leaderboardResponse.json();
+                    bountyData.leaderboards = leaderboardData.leaderboards || {};
+                    updateBountyLeaderboard();
+                }
+
+            } catch (error) {
+                console.error('Chyba při načítání bounty dat:', error);
+            }
+        }
+
+        // Aktualizace aktivních bounty
+        function updateActiveBounties() {
+            const container = document.getElementById('active-bounties');
+            const countElement = document.getElementById('bounty-count');
+            
+            if (!bountyData.activeBounties || bountyData.activeBounties.length === 0) {
+                container.innerHTML = '<div class="no-data">Žádné aktivní bounty</div>';
+                countElement.textContent = '(0)';
+                return;
+            }
+
+            countElement.textContent = `(${bountyData.activeBounties.length})`;
+
+            let html = '';
+            bountyData.activeBounties.forEach(bounty => {
+                const isMyBounty = currentUser && bounty.placed_by_steam_id === currentUser.id;
+                const isTargetMe = currentUser && bounty.target_steam_id === currentUser.id;
+                
+                let itemClass = 'bounty-item';
+                if (isMyBounty) itemClass += ' my-bounty';
+                if (isTargetMe) itemClass += ' target-me';
+
+                const timeRemaining = new Date(bounty.expires_at) - new Date();
+                const hoursRemaining = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60)));
+
+                html += `
+                    <div class="${itemClass}" onclick="centerOnBountyTarget('${bounty.target_steam_id}')">
+                        <div class="bounty-header">
+                            <span class="bounty-target">${bounty.target_name}</span>
+                            <span class="bounty-amount">${bounty.amount}⭐</span>
+                        </div>
+                        <div class="bounty-details">
+                            <span>Od: ${bounty.placed_by_name}</span>
+                            <span>${hoursRemaining}h zbývá</span>
+                        </div>
+                        ${isMyBounty ? `
+                            <div class="bounty-actions-small">
+                                <button class="bounty-cancel-btn" onclick="event.stopPropagation(); cancelBounty(${bounty.id}, '${bounty.target_name}')">
+                                    <i class="fa-solid fa-times"></i> Zrušit
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Aktualizace uživatelských bounty statistik
+        function updateUserBountyStats() {
+            if (!bountyData.userEconomy) return;
+
+            const economy = bountyData.userEconomy;
+            
+            document.getElementById('user-points').textContent = economy.points || 0;
+            document.getElementById('user-bounties-placed').textContent = economy.bounties_placed || 0;
+            document.getElementById('user-bounties-completed').textContent = economy.bounties_completed || 0;
+            
+            // Spočítat bounty na mě
+            const bountiesOnMe = bountyData.activeBounties ? 
+                bountyData.activeBounties.filter(b => currentUser && b.target_steam_id === currentUser.id).length : 0;
+            document.getElementById('user-bounty-on-me').textContent = bountiesOnMe;
+        }
+
+        // Aktualizace bounty žebříčku
+        function updateBountyLeaderboard() {
+            if (!bountyData.leaderboards || !bountyData.leaderboards.points) return;
+
+            const content = document.getElementById('bounty-leaderboard-content');
+            const leaderboard = bountyData.leaderboards.points;
+
+            if (leaderboard.length === 0) {
+                content.innerHTML = '<div class="no-data">Žádná data k zobrazení</div>';
+                return;
+            }
+
+            let html = '';
+            leaderboard.slice(0, 10).forEach((player, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                
+                html += `
+                    <div class="leaderboard-item ${rankClass}">
+                        <div class="player-rank">#${index + 1}</div>
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-value">${player.points}⭐</div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+        }
+
+        // Zobrazení dialogu pro vytvoření bounty
+        async function showCreateBountyDialog() {
+            try {
+                // Načíst aktuální seznam hráčů pro dropdown
+                const response = await fetch('/api/combined-data');
+                if (!response.ok) throw new Error('Chyba při načítání hráčů');
+                
+                const data = await response.json();
+                const players = data.players || [];
+                
+                const targetSelect = document.getElementById('bounty-target');
+                targetSelect.innerHTML = '<option value="">Vyberte hráče...</option>';
+                
+                // Filtrovat vlastní účet
+                const availablePlayers = players.filter(p => 
+                    p.steamId && p.steamId !== currentUser.id
+                );
+                
+                availablePlayers.forEach(player => {
+                    targetSelect.innerHTML += `
+                        <option value="${player.steamId}" data-name="${player.name}">
+                            ${player.name} (${player.dino})
+                        </option>
+                    `;
+                });
+
+                document.getElementById('bounty-dialog-overlay').style.display = 'block';
+                document.getElementById('bounty-dialog').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Chyba při načítání hráčů:', error);
+                showToast('Chyba při načítání seznamu hráčů', 'error');
+            }
+        }
+
+        // Skrytí bounty dialogu
+        function hideBountyDialog() {
+            document.getElementById('bounty-dialog-overlay').style.display = 'none';
+            document.getElementById('bounty-dialog').style.display = 'none';
+            document.getElementById('bounty-form').reset();
+        }
+
+        // Zpracování odeslání bounty formuláře
+        async function handleBountySubmit(e) {
+            e.preventDefault();
+            
+            const targetSelect = document.getElementById('bounty-target');
+            const amountInput = document.getElementById('bounty-amount');
+            
+            const targetSteamId = targetSelect.value;
+            const targetName = targetSelect.selectedOptions[0]?.getAttribute('data-name');
+            const amount = parseInt(amountInput.value);
+            
+            if (!targetSteamId || !targetName || !amount) {
+                showToast('Vyplňte všechna pole', 'error');
+                return;
+            }
+
+            if (amount < 100) {
+                showToast('Minimální bounty je 100 bodů', 'error');
+                return;
+            }
+
+            try {
+                const submitBtn = document.getElementById('bounty-submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Vyhlašuji...';
+
+                const response = await fetch('/api/bounty/create', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        targetSteamId: targetSteamId,
+                        targetName: targetName,
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message || `Bounty ${amount}⭐ na ${targetName} bylo vyhlášeno!`, 'bounty');
+                    hideBountyDialog();
+                    await loadBountyData(); // Refresh bounty data
+                } else {
+                    showToast(result.error || 'Chyba při vytváření bounty', 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při vytváření bounty:', error);
+                showToast('Chyba při komunikaci se serverem', 'error');
+            } finally {
+                const submitBtn = document.getElementById('bounty-submit-btn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Vyhlásit';
+            }
+        }
+
+        // Zrušení bounty
+        async function cancelBounty(bountyId, targetName) {
+            if (!confirm(`Opravdu chcete zrušit bounty na ${targetName}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/bounty/${bountyId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message || `Bounty na ${targetName} bylo zrušeno`, 'info');
+                    await loadBountyData(); // Refresh bounty data
+                } else {
+                    showToast(result.error || 'Chyba při rušení bounty', 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při rušení bounty:', error);
+                showToast('Chyba při komunikaci se serverem', 'error');
+            }
+        }
+
+        // Zobrazení mých bounty
+        async function showMyBounties() {
+            try {
+                const response = await fetch('/api/bounty/my', {
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const bounties = result.bounties;
+                    let message = '';
+                    
+                    if (bounties.placed.length > 0) {
+                        message += `Vyhlášené bounty (${bounties.placed.length}):\n`;
+                        bounties.placed.forEach(b => {
+                            message += `• ${b.target_name}: ${b.amount}⭐\n`;
+                        });
+                    }
+                    
+                    if (bounties.targeting.length > 0) {
+                        if (message) message += '\n';
+                        message += `Bounty na vás (${bounties.targeting.length}):\n`;
+                        bounties.targeting.forEach(b => {
+                            message += `• Od ${b.placed_by_name}: ${b.amount}⭐\n`;
+                        });
+                    }
+                    
+                    if (!message) {
+                        message = 'Nemáte žádné aktivní bounty.';
+                    }
+                    
+                    alert(message);
+                } else {
+                    showToast(result.error || 'Chyba při načítání bounty', 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při načítání mých bounty:', error);
+                showToast('Chyba při komunikaci se serverem', 'error');
+            }
+        }
+
+        // Centrování na bounty target (pokud je na mapě)
+        function centerOnBountyTarget(steamId) {
+            // Tato funkce bude fungovat pouze pokud je uživatel na mapě
+            // Pro statistiky stránku můžeme zobrazit informaci nebo přesměrovat
+            showToast('Pro sledování pozice přejděte na mapu', 'info');
         }
 
         // Aktualizace zobrazení statistik
@@ -778,6 +1349,19 @@ async function searchPlayer() {
         function updateLeaderboard() {
             const content = document.getElementById('leaderboard-content');
             const title = document.getElementById('leaderboard-title');
+            const mainCard = document.getElementById('main-leaderboard-card');
+            const bountyCard = document.getElementById('bounty-leaderboard-card');
+            
+            // Zobrazit/skrýt karty podle aktivního tabu
+            if (currentTab === 'bounty-leaderboard') {
+                mainCard.style.display = 'none';
+                bountyCard.style.display = 'block';
+                updateBountyLeaderboard();
+                return;
+            } else {
+                mainCard.style.display = 'block';
+                bountyCard.style.display = 'none';
+            }
             
             let data = [];
             let titleText = '';
@@ -854,26 +1438,24 @@ async function searchPlayer() {
             content.innerHTML = html;
         }
 
-// Aktualizace statistik uživatele - upravit pro správné propojení s databází
-function updateUserStats() {
-    if (!currentUser) return;
+        // Aktualizace statistik uživatele
+        function updateUserStats() {
+            if (!currentUser) return;
 
-    // Hledat statistiky současného uživatele v datech
-    const allPlayers = statsData.topKills || [];
-    const userStats = allPlayers.find(p => p.id === currentUser.id);
-    
-    if (userStats) {
-        document.getElementById('user-kills').textContent = userStats.kills || 0;
-        document.getElementById('user-deaths').textContent = userStats.deaths || 0;
-        document.getElementById('user-kd').textContent = (userStats.kd || 0).toFixed(2);
-        document.getElementById('user-streak').textContent = userStats.streak || 0;
-        
-        // Najít pořadí uživatele
-        const killsRanking = [...allPlayers].sort((a, b) => b.kills - a.kills);
-        const userRank = killsRanking.findIndex(p => p.id === currentUser.id) + 1;
-        document.getElementById('user-rank').textContent = userRank > 0 ? `#${userRank}` : '#-';
-    }
-}
+            const allPlayers = statsData.topKills || [];
+            const userStats = allPlayers.find(p => p.id === currentUser.id);
+            
+            if (userStats) {
+                document.getElementById('user-kills').textContent = userStats.kills || 0;
+                document.getElementById('user-deaths').textContent = userStats.deaths || 0;
+                document.getElementById('user-kd').textContent = (userStats.kd || 0).toFixed(2);
+                document.getElementById('user-streak').textContent = userStats.streak || 0;
+                
+                const killsRanking = [...allPlayers].sort((a, b) => b.kills - a.kills);
+                const userRank = killsRanking.findIndex(p => p.id === currentUser.id) + 1;
+                document.getElementById('user-rank').textContent = userRank > 0 ? `#${userRank}` : '#-';
+            }
+        }
 
         // Aktualizace přehledu
         function updateOverview() {
@@ -927,7 +1509,6 @@ function updateUserStats() {
 
         // Zobrazení tabu
         function showTab(tab) {
-            // Aktualizace aktivního tlačítka
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -937,7 +1518,7 @@ function updateUserStats() {
             updateLeaderboard();
         }
 
-        // Hledání hráče
+        // Aktualizace hledání hráče
         async function searchPlayer() {
             const searchTerm = document.getElementById('search-input').value.trim();
             const resultsDiv = document.getElementById('search-results');
@@ -948,7 +1529,7 @@ function updateUserStats() {
             }
 
             try {
-                const response = await fetch(`/api/player-stats?search=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`/api/player-search?search=${encodeURIComponent(searchTerm)}`);
                 if (!response.ok) throw new Error('Hráč nenalezen');
 
                 const playerData = await response.json();
@@ -971,13 +1552,20 @@ function updateUserStats() {
                             </div>
                             <div class="user-stat">
                                 <span class="user-stat-value">${playerData.streak || 0}</span>
-                                <div class="user-stat-label">Streak</div>
+                                <div class="user-stat-label">Current Streak</div>
                             </div>
                             <div class="user-stat">
-                                <span class="user-stat-value">${playerData.rank ? `#${playerData.rank}` : '#-'}</span>
-                                <div class="user-stat-label">Pořadí</div>
+                                <span class="user-stat-value">${playerData.bestStreak || 0}</span>
+                                <div class="user-stat-label">Best Streak</div>
                             </div>
                         </div>
+                        ${currentUser ? `
+                            <div style="margin-top: 10px;">
+                                <button class="bounty-btn primary" onclick="quickCreateBounty('${playerData.steamId || playerData.id}', '${playerData.name.replace(/'/g, "\\'")}')">
+                                    <i class="fa-solid fa-crosshairs"></i> Vyhlásit Bounty
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             } catch (error) {
@@ -990,24 +1578,52 @@ function updateUserStats() {
             }
         }
 
-        // Formátování herního času
-        function formatPlaytime(minutes) {
-            if (!minutes || minutes === 0) return '0h';
+        // Rychlé vytvoření bounty na hráče
+        function quickCreateBounty(steamId, playerName) {
+            const amount = prompt(`Kolik bodů chcete vyhlásit jako bounty na ${playerName}?`, '500');
             
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            
-            if (hours > 0) {
-                return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-            } else {
-                return `${mins}m`;
+            if (!amount || isNaN(amount) || parseInt(amount) < 100) {
+                showToast('Zadejte platnou částku (minimum 100 bodů)', 'error');
+                return;
+            }
+
+            createBountyForPlayer(steamId, playerName, parseInt(amount));
+        }
+
+        // Vytvoření bounty pro konkrétního hráče
+        async function createBountyForPlayer(steamId, playerName, amount) {
+            try {
+                const response = await fetch('/api/bounty/create', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        targetSteamId: steamId,
+                        targetName: playerName,
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message || `Bounty ${amount}⭐ na ${playerName} bylo vyhlášeno!`, 'bounty');
+                    await loadBountyData(); // Refresh bounty data
+                } else {
+                    showToast(result.error || 'Chyba při vytváření bounty', 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při vytváření bounty:', error);
+                showToast('Chyba při komunikaci se serverem', 'error');
             }
         }
 
         // Aktualizace času poslední aktualizace
         function updateLastUpdate() {
-            document.getElementById('last-update').textContent = 
-                `Poslední aktualizace: ${new Date().toLocaleTimeString()}`;
+            // Implementace podle potřeby
         }
 
         // Toast notifikace
@@ -1018,6 +1634,7 @@ function updateUserStats() {
             let icon = 'fa-info-circle';
             if (type === 'success') icon = 'fa-check-circle';
             if (type === 'error') icon = 'fa-exclamation-circle';
+            if (type === 'bounty') icon = 'fa-crosshairs';
             
             toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
             
@@ -1031,7 +1648,9 @@ function updateUserStats() {
         // Globální funkce pro kompatibilitu
         window.showTab = showTab;
         window.searchPlayer = searchPlayer;
-        window.refreshData = refreshData;
+        window.cancelBounty = cancelBounty;
+        window.quickCreateBounty = quickCreateBounty;
+        window.centerOnBountyTarget = centerOnBountyTarget;
     </script>
 </body>
 </html>
