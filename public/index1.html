@@ -1,0 +1,3765 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jurský Masakr - The Isle Evrima server od KarelKana.Eu</title>
+<meta name="description" content="Oficiální stránka Jurský Masakr - český The Isle Evrima server. Připojte se k nám a zažijte dinosauří přežití naplno.">
+<meta name="keywords" content="The Isle, Jurský Masakr, The Isle Evrima, český The Isle server, dinosauři, KarelKana.Eu">
+<meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e2e2e;
+            --secondary-color: #1a1a1a;
+            --accent-color: #4CAF50;
+            --accent-color-dark: #3e8e41;
+            --text-color: #f0f0f0;
+            --border-color: #444;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+            --highlight-color: #2196F3;
+            --carnivore-color: #f44336;
+            --herbivore-color: #4CAF50;
+            --other-color: #2196F3;
+            --friend-color: #9c27b0;
+            --bounty-color: #FFD700;
+            --bounty-danger: #FF4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar h1 i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .online {
+            background-color: var(--success-color);
+        }
+
+        .offline {
+            background-color: var(--error-color);
+        }
+
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: var(--primary-color);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .auth-panel {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .auth-panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-panel h3 i {
+            margin-right: 8px;
+            color: var(--highlight-color);
+        }
+
+        .user-info {
+            display: none;
+        }
+
+        .auth-panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .friends-panel {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .friends-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .friends-panel h3 i {
+            margin-right: 8px;
+            color: var(--friend-color);
+        }
+        
+        .friends-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .friend-item {
+            padding: 8px 10px;
+            border-left: 3px solid var(--friend-color);
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        
+        .friend-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .friend-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .friend-online {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .friend-online.online {
+            background-color: var(--success-color);
+        }
+        
+        .friend-online.offline {
+            background-color: #777;
+        }
+        
+        .friend-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .friend-remove:hover {
+            color: var(--error-color);
+        }
+        
+        .add-friend-form {
+            margin-top: 15px;
+        }
+        
+        .add-friend-input {
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+        
+        .add-friend-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: var(--friend-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .add-friend-btn:hover {
+            background-color: #7B1FA2;
+        }
+
+        .friend-requests-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 3px solid #ffc107;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .friend-outgoing-requests-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(33, 150, 243, 0.1);
+            border-left: 3px solid #2196F3;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .friend-request-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .friend-request-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .friend-request-btn {
+            flex: 1;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            color: white;
+        }
+
+        .friend-request-btn.accept {
+            background-color: #4CAF50;
+        }
+
+        .friend-request-btn.reject {
+            background-color: #f44336;
+        }
+
+        .friend-request-btn:hover {
+            opacity: 0.8;
+        }
+
+        .friend-cancel-btn {
+            padding: 4px 8px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .friend-cancel-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* BOUNTY SYSTEM STYLES */
+        .bounty-panel {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .bounty-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .bounty-panel h3 i {
+            margin-right: 8px;
+            color: var(--bounty-color);
+        }
+
+        .bounty-economy {
+            background: linear-gradient(135deg, var(--bounty-color), #FFA000);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            color: #000;
+            text-align: center;
+        }
+
+        .bounty-points {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .bounty-rank {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .bounty-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .bounty-item {
+            padding: 10px;
+            border-left: 3px solid var(--bounty-color);
+            background-color: rgba(255, 215, 0, 0.1);
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .bounty-item:hover {
+            background-color: rgba(255, 215, 0, 0.2);
+        }
+
+        .bounty-target {
+            font-weight: bold;
+            color: var(--bounty-color);
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bounty-amount {
+            color: var(--bounty-color);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .bounty-placed-by {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .bounty-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .bounty-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .bounty-btn.hunt {
+            background-color: var(--bounty-danger);
+            flex: 1;
+        }
+
+        .bounty-btn.cancel {
+            background-color: #666;
+        }
+
+        .bounty-btn:hover {
+            opacity: 0.8;
+        }
+
+        .create-bounty-form {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(255, 215, 0, 0.1);
+            border-radius: 5px;
+            border: 1px solid var(--bounty-color);
+        }
+
+        .create-bounty-form h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--bounty-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .create-bounty-form h4 i {
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--bounty-color);
+        }
+
+        .form-group select,
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--bounty-color);
+        }
+
+        .bounty-marker {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            border: 3px solid var(--bounty-color);
+            background-color: var(--bounty-danger);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            z-index: 15;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            animation: bountyPulse 2s infinite;
+        }
+
+        @keyframes bountyPulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        .bounty-marker:hover {
+            transform: translate(-50%, -50%) scale(1.5);
+            z-index: 25;
+        }
+
+        .cache-indicator {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 100;
+            display: none;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+
+        .friend-dialog-extended {
+            width: 400px;
+        }
+
+        .friend-permission-options {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .permission-checkbox input {
+            margin-right: 8px;
+        }
+
+        .server-status-extended {
+            font-size: 12px;
+        }
+
+        .cache-warning {
+            color: #ff9800;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        .notification-badge {
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            margin-left: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .filter-panel {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .filter-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-panel h3 i {
+            margin-right: 8px;
+            color: var(--warning-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            margin-right: 5px;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .player-list {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .player-list h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .player-list h3 i {
+            margin-right: 8px;
+            color: #9c27b0;
+        }
+
+        .dino-stats {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .dino-stats h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dino-stats h3 i {
+            margin-right: 8px;
+            color: var(--warning-color);
+        }
+
+        .dino-item {
+            padding: 8px 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-item {
+            padding: 8px 10px;
+            border-left: 3px solid var(--accent-color);
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .player-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .player-item.player-friend {
+            border-left-color: var(--friend-color);
+        }
+
+        .player-item.player-bounty {
+            border-left-color: var(--bounty-color);
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .friend-icon {
+            margin-left: 5px;
+            color: var(--friend-color);
+            font-size: 12px;
+        }
+
+        .bounty-icon {
+            margin-left: 5px;
+            color: var(--bounty-color);
+            font-size: 12px;
+        }
+
+        .player-details {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .player-details span {
+            margin-right: 10px;
+        }
+        
+        .player-stats {
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .player-self .player-stats,
+        .player-friend .player-stats {
+            display: block;
+        }
+        
+        .stat-bar {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 4px;
+            overflow: hidden;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .health-bar .stat-bar-fill {
+            background-color: var(--success-color);
+        }
+        
+        .hunger-bar .stat-bar-fill {
+            background-color: var(--carnivore-color);
+        }
+        
+        .thirst-bar .stat-bar-fill {
+            background-color: var(--highlight-color);
+        }
+        
+        .stamina-bar .stat-bar-fill {
+            background-color: var(--warning-color);
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: move;
+        }
+
+        .map-wrapper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: center center;
+        }
+
+        .map-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 620px;
+            height: 620px;
+            max-width: none;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #markers-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 620px;
+            height: 620px;
+            pointer-events: none;
+        }
+
+        .player-marker {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .player-marker:hover {
+            transform: translate(-50%, -50%) scale(1.3);
+            z-index: 20;
+        }
+
+        .marker-carnivore {
+            background-color: var(--carnivore-color);
+        }
+
+        .marker-herbivore {
+            background-color: var(--herbivore-color);
+        }
+
+        .marker-other {
+            background-color: var(--other-color);
+        }
+
+        .marker-self {
+            border: 3px solid yellow;
+            box-shadow: 0 0 12px rgba(255, 255, 0, 0.7);
+        }
+        
+        .marker-friend {
+            border: 3px solid var(--friend-color);
+            box-shadow: 0 0 12px rgba(156, 39, 176, 0.7);
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            max-width: 200px;
+        }
+
+        .tooltip-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tooltip-title .friend-icon {
+            margin-left: 5px;
+        }
+
+        .tooltip-title .bounty-icon {
+            margin-left: 5px;
+        }
+        
+        .tooltip-stats {
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .tooltip-stats.visible {
+            display: block;
+        }
+        
+        .tooltip .stat-bar {
+            height: 5px;
+            margin-bottom: 3px;
+        }
+        
+        .tooltip .stat-label {
+            margin-bottom: 2px;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s, slideOut 0.3s 5s forwards;
+            max-width: 300px;
+        }
+
+        .toast i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .toast.success {
+            background-color: var(--success-color);
+        }
+
+        .toast.error {
+            background-color: var(--error-color);
+        }
+
+        .toast.info {
+            background-color: var(--highlight-color);
+        }
+
+        .toast.bounty {
+            background-color: var(--bounty-color);
+            color: #000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: var(--accent-color);
+        }
+
+        .map-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--border-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .map-control-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .players-count {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        .players-count i {
+            margin-right: 8px;
+            color: var(--accent-color);
+        }
+
+        @media screen and (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                max-height: 300px;
+            }
+        }
+
+        .player-self {
+            border-left-color: yellow;
+        }
+
+        #no-players-message {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+        
+        .friend-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            display: none;
+        }
+        
+        .friend-dialog h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .friend-dialog h3 i {
+            margin-right: 8px;
+            color: var(--friend-color);
+        }
+        
+        .friend-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .friend-dialog-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .friend-dialog-buttons button {
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .player-list-dialog {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button i {
+            margin-right: 8px;
+        }
+
+        button:hover {
+            background-color: var(--accent-color-dark);
+        }
+
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .admin-badge {
+            background-color: var(--error-color);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h1><i class="fa-solid fa-dragon"></i> [EU] Jursky Masakr 1.5x Grow I Stats AI & Food Boost I CZ/SK I Map</h1>
+    <div class="nav-links">
+        <a href="/" class="active"><i class="fa-solid fa-map"></i> Mapa</a>
+        <a href="/stats.html"><i class="fa-solid fa-chart-bar"></i> Stats</a>
+        <a href="https://discord.gg/8MdXzVNBMY"><i class="fa-brands fa-discord"></i> Discord</a>
+    </div>
+</div>
+
+    <div class="content">
+        <div class="sidebar">
+            <div class="auth-panel" id="auth-panel">
+                <h3><i class="fa-solid fa-user"></i> Login</h3>
+                <p>To view your position on the map, please log in using your Steam account.</p>
+                <div class="auth-panel-actions">
+                    <a href="/auth/steam" class="login-button">
+                        <button><i class="fa-brands fa-steam"></i> Login with Steam</button>
+                    </a>
+                </div>
+                <div class="user-info" id="user-info">
+                    <p>Logged in as <span id="user-name">User</span> <span id="admin-badge" class="admin-badge">Admin</span></p>
+                    <button id="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            <div class="friends-panel" id="friends-panel">
+                <h3>
+                    <i class="fa-solid fa-user-friends"></i> My friends
+                    <span id="friend-requests-badge" class="notification-badge" style="display: none;" title="Incoming friend requests">0</span>
+                    <span id="outgoing-requests-badge" class="notification-badge" style="display: none; background-color: #2196F3;" title="Sent requests">0</span>
+                </h3>
+                <div class="friends-list" id="friends-list">
+                    <div id="no-friends-message" style="text-align: center; color: #aaa; padding: 10px;">
+                        You don't have any friends yet.
+                    </div>
+                </div>
+                <div class="add-friend-form">
+                    <button class="add-friend-btn" id="add-friend-btn">
+                        <i class="fa-solid fa-user-plus"></i> Add friend
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOUNTY SYSTEM PANEL -->
+            <div class="bounty-panel" id="bounty-panel">
+                <h3>
+                    <i class="fa-solid fa-crosshairs"></i> Bounty System
+                    <span id="bounty-badge" class="notification-badge" style="display: none; background-color: var(--bounty-color); color: #000;" title="Active bounties">0</span>
+                </h3>
+                
+                <!-- User Economy -->
+                <div class="bounty-economy" id="bounty-economy" style="display: none;">
+                    <div class="bounty-points" id="user-bounty-points">0</div>
+                    <div class="bounty-rank">Bounty Points</div>
+                </div>
+
+                <!-- Active Bounties List -->
+                <div class="bounty-list" id="bounty-list">
+                    <div style="text-align: center; color: #aaa; padding: 10px;">
+                        Loading bounties...
+                    </div>
+                </div>
+
+                <!-- Create Bounty Form -->
+                <div class="create-bounty-form" id="create-bounty-form" style="display: none;">
+                    <h4><i class="fa-solid fa-plus"></i> Create Bounty</h4>
+                    <div class="form-group">
+                        <label for="bounty-target">Target Player:</label>
+                        <select id="bounty-target">
+                            <option value="">Select a player...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bounty-amount">Bounty Amount:</label>
+                        <input type="number" id="bounty-amount" min="100" step="50" placeholder="Minimum 100 points">
+                    </div>
+                    <button id="create-bounty-btn" class="bounty-btn hunt" style="width: 100%; padding: 10px;">
+                        <i class="fa-solid fa-crosshairs"></i> Place Bounty
+                    </button>
+                </div>
+
+                <button id="toggle-bounty-form" class="bounty-btn hunt" style="width: 100%; margin-top: 10px; display: none;">
+                    <i class="fa-solid fa-plus"></i> Create New Bounty
+                </button>
+            </div>
+
+            <div class="filter-panel">
+                <h3><i class="fa-solid fa-filter"></i> Filters</h3>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="dino-filter" value="carnivore" checked>
+                        Carnivore
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="dino-filter" value="herbivore" checked>
+                        Herbivore
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="dino-filter" value="other" checked>
+                        Omnivores
+                    </label>
+                </div>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-bounties" checked>
+                        Show Bounties
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="search-player">Search for players</label>
+                    <input type="text" id="search-player" placeholder="Jméno hráče...">
+                </div>
+            </div>
+
+            <div class="player-list">
+                <h3><i class="fa-solid fa-users"></i> Players <span id="player-count">(0)</span></h3>
+                <div id="players-container">
+                    <div class="loading-text" id="player-loading">Loading players....</div>
+                    <div id="no-players-message">No players online</div>
+                </div>
+            </div>
+
+            <div class="dino-stats">
+                <h3><i class="fa-solid fa-paw"></i> Dinosaurs</h3>
+                <div id="dino-stats-container">
+                    <div style="text-align: center; color: #aaa; padding: 10px;">
+                        Loading stats...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="map-container" id="map-container">
+            <div class="map-wrapper" id="map-wrapper">
+                <img src="/worldmap.png" alt="Mapa The Isle" class="map-image" id="map-image">
+                <div id="markers-container"></div>
+            </div>
+            <div id="tooltip" class="tooltip"></div>
+            
+            <div class="players-count" id="players-count">
+                <i class="fa-solid fa-users"></i>
+                <span id="online-count">0</span> Players online
+            </div>
+        </div>
+        
+        <div class="map-controls">
+            <div class="map-control-btn" id="zoom-in"><i class="fa-solid fa-plus"></i></div>
+            <div class="map-control-btn" id="zoom-out"><i class="fa-solid fa-minus"></i></div>
+            <div class="map-control-btn" id="reset-view"><i class="fa-solid fa-home"></i></div>
+        </div>
+    </div>
+    
+    <div class="friend-dialog-overlay" id="friend-dialog-overlay"></div>
+    <div class="friend-dialog" id="friend-dialog">
+        <h3><i class="fa-solid fa-user-plus"></i> Add friend</h3>
+        <p>Select the players you want to add as friends:</p>
+        
+        <div class="friend-permission-options">
+            <h4 style="margin: 0 0 10px 0; font-size: 14px;">Sdílení informací:</h4>
+            <label class="permission-checkbox">
+                <input type="checkbox" id="share-location" checked>
+                Share my location on the map
+            </label>
+            <label class="permission-checkbox">
+                <input type="checkbox" id="share-stats">
+                Share my statistics (health, hunger, thirst)
+            </label>
+        </div>
+        
+        <div class="player-list-dialog" id="player-list-dialog">
+        </div>
+        <div class="friend-dialog-buttons">
+            <button id="friend-dialog-cancel"><i class="fa-solid fa-times"></i> Cancel</button>
+            <button id="friend-dialog-add" class="add-friend-btn"><i class="fa-solid fa-user-plus"></i> Send requests</button>
+        </div>
+    </div>
+
+    <!-- Cache indikátor (přidán dynamicky JS) -->
+    <div id="cache-indicator" class="cache-indicator" style="display: none;"></div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+// Globální proměnné pro mapování
+let mapScale = 1;
+let mapTranslateX = 0;
+let mapTranslateY = 0;
+let isDragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+let playersData = [];
+let filteredPlayersData = [];
+let refreshTimerInterval;
+let friendsManager;
+let bountyManager;
+let mapImageDimensions = { width: 0, height: 0 };
+
+// OPRAVENO - Globální stav aplikace
+window.appState = {
+    user: null,
+    isAuthInitialized: false,
+    authPromise: null
+};
+
+// API a přihlášení
+document.addEventListener('DOMContentLoaded', function() {
+    // Konstanty a konfigurace
+    const AUTO_REFRESH_INTERVAL = 60; // v sekundách
+    const API_URL = window.location.origin + '/api';
+    
+    // DOM elementy
+    const markersContainer = document.getElementById('markers-container');
+    const tooltip = document.getElementById('tooltip');
+    const mapImage = document.getElementById('map-image');
+    const mapContainer = document.getElementById('map-container');
+    const mapWrapper = document.getElementById('map-wrapper');
+    const playerLoading = document.getElementById('player-loading');
+    const noPlayersMessage = document.getElementById('no-players-message');
+    const searchPlayer = document.getElementById('search-player');
+    const toastContainer = document.getElementById('toast-container');
+    const logoutBtn = document.getElementById('logout-btn');
+    const authPanel = document.getElementById('auth-panel');
+    const userInfo = document.getElementById('user-info');
+    const userName = document.getElementById('user-name');
+    const adminBadge = document.getElementById('admin-badge');
+    const playersContainer = document.getElementById('players-container');
+    const friendsPanel = document.getElementById('friends-panel');
+    const friendsList = document.getElementById('friends-list');
+    const addFriendBtn = document.getElementById('add-friend-btn');
+    const friendDialog = document.getElementById('friend-dialog');
+    const friendDialogOverlay = document.getElementById('friend-dialog-overlay');
+    const friendDialogCancel = document.getElementById('friend-dialog-cancel');
+    const friendDialogAdd = document.getElementById('friend-dialog-add');
+    const playerListDialog = document.getElementById('player-list-dialog');
+    const playerCount = document.getElementById('player-count');
+    const onlineCount = document.getElementById('online-count');
+    const dinoStatsContainer = document.getElementById('dino-stats-container');
+
+    // BOUNTY SYSTEM - DOM elementy
+    const bountyPanel = document.getElementById('bounty-panel');
+    const bountyEconomy = document.getElementById('bounty-economy');
+    const userBountyPoints = document.getElementById('user-bounty-points');
+    const bountyList = document.getElementById('bounty-list');
+    const createBountyForm = document.getElementById('create-bounty-form');
+    const toggleBountyForm = document.getElementById('toggle-bounty-form');
+    const bountyTarget = document.getElementById('bounty-target');
+    const bountyAmount = document.getElementById('bounty-amount');
+    const createBountyBtn = document.getElementById('create-bounty-btn');
+    const bountyBadge = document.getElementById('bounty-badge');
+    const showBountiesCheckbox = document.getElementById('show-bounties');
+
+    // BOUNTY MANAGER CLASS
+    class BountyManager {
+        constructor() {
+            this.activeBounties = [];
+            this.userEconomy = null;
+            this.bountyLocations = [];
+            this.init();
+        }
+
+        async init() {
+            this.setupEventListeners();
+            
+            // Načíst bounty data pokud je uživatel přihlášen
+            if (window.appState.isAuthInitialized && window.appState.user) {
+                await this.loadBountyData();
+            }
+
+            // Periodická aktualizace každých 30 sekund
+            setInterval(() => {
+                if (window.appState.user) {
+                    this.loadBountyData();
+                }
+            }, 30000);
+        }
+
+        setupEventListeners() {
+            if (toggleBountyForm) {
+                toggleBountyForm.addEventListener('click', () => {
+                    this.toggleCreateForm();
+                });
+            }
+
+            if (createBountyBtn) {
+                createBountyBtn.addEventListener('click', () => {
+                    this.createBounty();
+                });
+            }
+
+            if (showBountiesCheckbox) {
+                showBountiesCheckbox.addEventListener('change', () => {
+                    this.toggleBountyMarkers();
+                });
+            }
+        }
+
+        async loadBountyData() {
+            if (!this.checkAuthentication()) {
+                return;
+            }
+
+            try {
+                // Načíst aktivní bounties
+                const bountiesResponse = await fetch('/api/bounty/active', {
+                    credentials: 'include'
+                });
+                
+                if (bountiesResponse.ok) {
+                    const bountiesData = await bountiesResponse.json();
+                    this.activeBounties = bountiesData.bounties || [];
+                }
+
+                // Načíst uživatelskou ekonomiku
+                const economyResponse = await fetch('/api/bounty/economy', {
+                    credentials: 'include'
+                });
+                
+                if (economyResponse.ok) {
+                    const economyData = await economyResponse.json();
+                    this.userEconomy = economyData.economy;
+                }
+
+                // Načíst bounty pozice pro mapu
+                const locationsResponse = await fetch('/api/bounty/locations', {
+                    credentials: 'include'
+                });
+                
+                if (locationsResponse.ok) {
+                    const locationsData = await locationsResponse.json();
+                    this.bountyLocations = locationsData.bountyLocations || [];
+                }
+
+                this.updateDisplay();
+                this.updateBountyMarkers();
+
+            } catch (error) {
+                console.error('Chyba při načítání bounty dat:', error);
+            }
+        }
+
+        checkAuthentication() {
+            if (!window.appState.isAuthInitialized) {
+                return false;
+            }
+            
+            if (!window.appState.user) {
+                return false;
+            }
+            
+            return true;
+        }
+
+        updateDisplay() {
+            if (!this.checkAuthentication()) {
+                bountyPanel.style.display = 'none';
+                return;
+            }
+
+            bountyPanel.style.display = 'block';
+
+            // Aktualizovat ekonomiku uživatele
+            if (this.userEconomy) {
+                bountyEconomy.style.display = 'block';
+                userBountyPoints.textContent = this.userEconomy.points || 0;
+            }
+
+            // Aktualizovat seznam bounty
+            this.updateBountyList();
+
+            // Aktualizovat badge
+            if (this.activeBounties.length > 0) {
+                bountyBadge.textContent = this.activeBounties.length;
+                bountyBadge.style.display = 'inline';
+            } else {
+                bountyBadge.style.display = 'none';
+            }
+
+            // Zobrazit toggle button
+            toggleBountyForm.style.display = 'block';
+        }
+
+        updateBountyList() {
+            if (!bountyList) return;
+
+            if (this.activeBounties.length === 0) {
+                bountyList.innerHTML = '<div style="text-align: center; color: #aaa; padding: 10px;">No active bounties</div>';
+                return;
+            }
+
+            let html = '';
+            this.activeBounties.forEach(bounty => {
+                const isMyBounty = bounty.placed_by_steam_id === window.appState.user.id;
+                const isTargetingMe = bounty.target_steam_id === window.appState.user.id;
+
+                html += `
+                    <div class="bounty-item" data-bounty-id="${bounty.id}">
+                        <div class="bounty-target">
+                            <span>${bounty.target_name}</span>
+                            <span class="bounty-amount">${bounty.amount}pts</span>
+                        </div>
+                        <div class="bounty-placed-by">
+                            Placed by: ${bounty.placed_by_name}
+                        </div>
+                        <div class="bounty-actions">
+                            ${!isMyBounty && !isTargetingMe ? 
+                                `<button class="bounty-btn hunt" onclick="bountyManager.huntBounty(${bounty.id})">
+                                    <i class="fa-solid fa-crosshairs"></i> Hunt
+                                </button>` : ''
+                            }
+                            ${isMyBounty ? 
+                                `<button class="bounty-btn cancel" onclick="bountyManager.cancelBounty(${bounty.id})">
+                                    <i class="fa-solid fa-times"></i> Cancel
+                                </button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+
+            bountyList.innerHTML = html;
+        }
+
+        updateBountyMarkers() {
+            // Vymazat staré bounty markery
+            document.querySelectorAll('.bounty-marker').forEach(marker => {
+                marker.remove();
+            });
+
+            if (!showBountiesCheckbox.checked) {
+                return;
+            }
+
+            // Přidat nové bounty markery
+            this.bountyLocations.forEach(location => {
+                if (location.x && location.y) {
+                    this.addBountyMarker(location);
+                }
+            });
+        }
+
+        addBountyMarker(bountyLocation) {
+            if (!markersContainer) return;
+
+            const marker = document.createElement('div');
+            marker.className = 'bounty-marker';
+            marker.dataset.bountyId = bountyLocation.bounty_id;
+            marker.dataset.targetSteamId = bountyLocation.target_steam_id;
+
+            // Pozicování markeru
+            positionMarker(marker, bountyLocation.x, bountyLocation.y);
+
+            // Event listenery
+            marker.addEventListener('mouseenter', (e) => this.showBountyTooltip(bountyLocation, e));
+            marker.addEventListener('mousemove', positionTooltip);
+            marker.addEventListener('mouseleave', hideTooltip);
+            marker.addEventListener('click', () => this.centerOnBounty(bountyLocation));
+
+            markersContainer.appendChild(marker);
+        }
+
+        showBountyTooltip(bountyLocation, event) {
+            if (!tooltip) return;
+
+            const bounty = this.activeBounties.find(b => b.id === bountyLocation.bounty_id);
+            if (!bounty) return;
+
+            let tooltipHTML = `
+                <div class="tooltip-title">
+                    <i class="fa-solid fa-crosshairs" style="color: var(--bounty-color);"></i>
+                    BOUNTY: ${bounty.target_name}
+                </div>
+                <div>Amount: <span style="color: var(--bounty-color); font-weight: bold;">${bounty.amount} points</span></div>
+                <div>Placed by: ${bounty.placed_by_name}</div>
+            `;
+
+            if (bountyLocation.dino) {
+                tooltipHTML += `<div>Playing as: ${bountyLocation.dino}</div>`;
+            }
+
+            tooltip.innerHTML = tooltipHTML;
+            tooltip.style.opacity = '1';
+            positionTooltip(event);
+        }
+
+        centerOnBounty(bountyLocation) {
+            const fakePlayer = {
+                x: bountyLocation.x,
+                y: bountyLocation.y,
+                name: bountyLocation.target_name
+            };
+            centerOnPlayer(fakePlayer);
+        }
+
+        toggleBountyMarkers() {
+            this.updateBountyMarkers();
+        }
+
+        toggleCreateForm() {
+            const isVisible = createBountyForm.style.display !== 'none';
+            createBountyForm.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                this.updateTargetPlayersList();
+            }
+        }
+
+        updateTargetPlayersList() {
+            if (!bountyTarget) return;
+
+            // Vymazat staré možnosti
+            bountyTarget.innerHTML = '<option value="">Select a player...</option>';
+
+            // Přidat online hráče (kromě sebe)
+            const availablePlayers = playersData.filter(player => {
+                return player.steamId && 
+                       player.steamId !== window.appState.user.id &&
+                       !this.activeBounties.some(b => b.target_steam_id === player.steamId);
+            });
+
+            availablePlayers.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.steamId;
+                option.textContent = `${player.name} (${player.dino})`;
+                bountyTarget.appendChild(option);
+            });
+        }
+
+        async createBounty() {
+            const targetSteamId = bountyTarget.value;
+            const amount = parseInt(bountyAmount.value);
+
+            if (!targetSteamId) {
+                showToast('Vyberte cílového hráče', 'error');
+                return;
+            }
+
+            if (!amount || amount < 100) {
+                showToast('Minimální bounty je 100 bodů', 'error');
+                return;
+            }
+
+            if (!this.userEconomy || this.userEconomy.points < amount) {
+                showToast('Nemáte dostatek bodů', 'error');
+                return;
+            }
+
+            try {
+                const targetPlayer = playersData.find(p => p.steamId === targetSteamId);
+                
+                const response = await fetch('/api/bounty/create', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        targetSteamId: targetSteamId,
+                        targetName: targetPlayer ? targetPlayer.name : 'Neznámý hráč',
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message, 'bounty');
+                    
+                    // Resetovat formulář
+                    bountyTarget.value = '';
+                    bountyAmount.value = '';
+                    createBountyForm.style.display = 'none';
+                    
+                    // Aktualizovat data
+                    await this.loadBountyData();
+                } else {
+                    showToast(result.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při vytváření bounty:', error);
+                showToast('Chyba při vytváření bounty', 'error');
+            }
+        }
+
+        async cancelBounty(bountyId) {
+            if (!confirm('Opravdu chcete zrušit toto bounty?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/bounty/${bountyId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message, 'info');
+                    await this.loadBountyData();
+                } else {
+                    showToast(result.error, 'error');
+                }
+
+            } catch (error) {
+                console.error('Chyba při rušení bounty:', error);
+                showToast('Chyba při rušení bounty', 'error');
+            }
+        }
+
+        async huntBounty(bountyId) {
+            const bounty = this.activeBounties.find(b => b.id === bountyId);
+            if (!bounty) return;
+
+            // Najít hráče na mapě a vycentrovat na něj
+            const targetPlayer = playersData.find(p => p.steamId === bounty.target_steam_id);
+            if (targetPlayer && targetPlayer.x && targetPlayer.y) {
+                centerOnPlayer(targetPlayer);
+                highlightMarker(targetPlayer);
+                
+                showToast(`Hunting ${bounty.target_name} for ${bounty.amount} points!`, 'bounty');
+                
+                setTimeout(() => {
+                    unhighlightMarker(targetPlayer);
+                }, 5000);
+            } else {
+                showToast(`${bounty.target_name} is not currently online`, 'info');
+            }
+        }
+
+        // Getter pro kompatibilitu
+        getActiveBounties() {
+            return this.activeBounties;
+        }
+
+        isBountyTarget(steamId) {
+            return this.activeBounties.some(b => b.target_steam_id === steamId);
+        }
+    }
+
+    // Inicializace rozměrů mapy s fixními rozměry
+    function updateMapDimensions() {
+        // Mapa má vždy fixní rozměry 620x620px
+        mapImageDimensions.width = 620;
+        mapImageDimensions.height = 620;
+        
+        // Kontejner markerů má stejné rozměry jako mapa
+        if (markersContainer) {
+            markersContainer.style.width = '620px';
+            markersContainer.style.height = '620px';
+            // Umístit kontejner markerů přesně na mapu
+            markersContainer.style.top = '50%';
+            markersContainer.style.left = '50%';
+            markersContainer.style.transform = 'translate(-50%, -50%)';
+        }
+        
+        console.log('Gateway mapa - fixní rozměry 620x620px, hranice ±400k');
+    }
+
+    // Funkce pro přepočet růstu
+    function calculateDisplayGrowth(actualGrowth) {
+        // Přepočet z herní hodnoty na procenta
+        // 100% = 0.75, takže vzorec je: display = (actual / 0.75) * 100
+        if (!actualGrowth) return 0;
+        return Math.round((actualGrowth / 0.750) * 100);
+    }
+
+    // OPRAVENO - Kontrola přihlášení uživatele s podporou Steam redirectu
+    async function checkUserLogin() {
+        console.log('🚀 START checkUserLogin() - Post-Steam auth verze');
+        
+        // Resetovat auth promise pokud je problém s redirectem
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAfterSteamAuth = window.location.pathname.includes('/auth/steam') || 
+                                urlParams.has('openid.mode') || 
+                                window.location.href.includes('steam') ||
+                                document.referrer.includes('steamcommunity.com');
+        
+        if (isAfterSteamAuth) {
+            console.log('🔄 Detekován Steam redirect, resetuji auth stav...');
+            window.appState.authPromise = null;
+            window.appState.isAuthInitialized = false;
+            
+            // Malé zpoždění pro Steam callback
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        // Zabránit duplikátním voláním
+        if (window.appState.authPromise) {
+            console.log('⏳ Auth promise už existuje, čekám...');
+            return window.appState.authPromise;
+        }
+        
+        console.log('🔍 Ověřuji přihlášení uživatele...');
+        console.log('📍 Current window.user:', window.user);
+        console.log('📍 Current appState:', window.appState);
+        
+        window.appState.authPromise = (async () => {
+            try {
+                console.log('📡 Odesílám požadavek na /api/user...');
+                
+                // Více pokusů o ověření po Steam auth
+                let response;
+                let attempts = 0;
+                const maxAttempts = 3;
+                
+                do {
+                    attempts++;
+                    console.log(`📡 Pokus ${attempts}/${maxAttempts}...`);
+                    
+                    response = await fetch(`${API_URL}/user`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    console.log(`📨 Response status (pokus ${attempts}):`, response.status);
+                    
+                    if (!response.ok && attempts < maxAttempts) {
+                        console.log(`⏳ Čekám 500ms před dalším pokusem...`);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                } while (!response.ok && attempts < maxAttempts);
+                
+                console.log('📨 Response headers:', [...response.headers.entries()]);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    console.log('✅ Odpověď ze serveru (RAW):', userData);
+                    
+                    if (userData.success && userData.user) {
+                        console.log('✅ Auth úspěšná! User data:', userData.user);
+                        
+                        // DŮLEŽITÉ - nastavit všechny reference
+                        window.user = userData.user;
+                        window.appState.user = userData.user;
+                        window.appState.isAuthInitialized = true;
+                        
+                        console.log('✅ Uživatel přihlášen:', userData.user.displayName || userData.user.name);
+                        console.log('✅ window.user nastaveno:', window.user);
+                        console.log('✅ appState.user nastaveno:', window.appState.user);
+                        
+                        updateUserInterface(userData.user);
+                        
+                        // Inicializovat friends manager POUZE po úspěšném přihlášení
+                        await initializeFriendsManager();
+                        
+                        // Inicializovat bounty manager POUZE po úspěšném přihlášení
+                        await initializeBountyManager();
+                        
+                        return userData.user;
+                    } else {
+                        console.log('❌ Auth response nemá success/user:', userData);
+                        window.user = null;
+                        window.appState.user = null;
+                        window.appState.isAuthInitialized = true;
+                        return null;
+                    }
+                } else {
+                    console.warn('⚠️ Auth API nedostupné po všech pokusech:', response.status);
+                    console.warn('⚠️ Response text:', await response.text());
+                    window.user = null;
+                    window.appState.user = null;
+                    window.appState.isAuthInitialized = true;
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Chyba při kontrole přihlášení:', error);
+                window.user = null;
+                window.appState.user = null;
+                window.appState.isAuthInitialized = true;
+                return null;
+            } finally {
+                console.log('🏁 checkUserLogin() dokončeno');
+                console.log('🏁 Final window.user:', window.user);
+                console.log('🏁 Final appState:', window.appState);
+            }
+        })();
+        
+        return window.appState.authPromise;
+    }
+
+    // NOVÁ funkce pro inicializaci friends manageru
+    async function initializeFriendsManager() {
+        if (!window.appState.user) {
+            console.log('👥 Přeskakuji friends manager - uživatel není přihlášen');
+            return;
+        }
+        
+        console.log('👥 Inicializuji friends manager pro uživatele:', window.appState.user.displayName);
+        
+        try {
+            // Pokud friends manager ještě neexistuje, vytvořit ho
+            if (!window.friendsManager) {
+                friendsManager = new FriendsManager();
+                window.friendsManager = friendsManager;
+            }
+            
+            // Načíst data přátel
+            await friendsManager.loadFriendsFromAPI();
+            friendsManager.updateFriendsDisplay();
+            
+            console.log('✅ Friends manager úspěšně inicializován');
+        } catch (error) {
+            console.error('❌ Chyba při inicializaci friends manageru:', error);
+        }
+    }
+
+    // NOVÁ funkce pro inicializaci bounty manageru
+    async function initializeBountyManager() {
+        if (!window.appState.user) {
+            console.log('🎯 Přeskakuji bounty manager - uživatel není přihlášen');
+            return;
+        }
+        
+        console.log('🎯 Inicializuji bounty manager pro uživatele:', window.appState.user.displayName);
+        
+        try {
+            // Pokud bounty manager ještě neexistuje, vytvořit ho
+            if (!window.bountyManager) {
+                bountyManager = new BountyManager();
+                window.bountyManager = bountyManager;
+            }
+            
+            // Načíst bounty data
+            await bountyManager.loadBountyData();
+            
+            console.log('✅ Bounty manager úspěšně inicializován');
+        } catch (error) {
+            console.error('❌ Chyba při inicializaci bounty manageru:', error);
+        }
+    }
+
+    // OPRAVENÝ FriendsManager s API podporou a friend requests
+    class FriendsManager {
+        constructor() {
+            this.friends = [];
+            this.incomingRequests = [];
+            this.outgoingRequests = [];
+            this.friendsPanel = document.getElementById('friends-panel');
+            this.friendsList = document.getElementById('friends-list');
+            this.noFriendsMessage = document.getElementById('no-friends-message');
+            this.addFriendBtn = document.getElementById('add-friend-btn');
+            this.friendDialog = document.getElementById('friend-dialog');
+            this.friendDialogOverlay = document.getElementById('friend-dialog-overlay');
+            this.playerListDialog = document.getElementById('player-list-dialog');
+            this._isLoading = false;
+            
+            this.init();
+        }
+        
+        async init() {
+            this.setupEventListeners();
+            
+            // Počkat na ověření přihlášení před načítáním dat
+            if (window.appState.isAuthInitialized && window.appState.user) {
+                await this.loadFriendsFromAPI();
+                this.updateFriendsList();
+            }
+            
+            // Periodická aktualizace žádostí každou minutu
+            setInterval(() => {
+                if (window.appState.user) {
+                    this.loadFriendsFromAPI();
+                }
+            }, 60000);
+        }
+        
+        setupEventListeners() {
+            if (this.addFriendBtn) {
+                this.addFriendBtn.addEventListener('click', () => {
+                    this.showAddFriendDialog();
+                });
+            }
+            
+            const cancelBtn = document.getElementById('friend-dialog-cancel');
+            const addBtn = document.getElementById('friend-dialog-add');
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.hideAddFriendDialog();
+                });
+            }
+            
+            if (addBtn) {
+                addBtn.addEventListener('click', () => {
+                    this.addSelectedFriends();
+                });
+            }
+            
+            if (this.friendDialogOverlay) {
+                this.friendDialogOverlay.addEventListener('click', () => {
+                    this.hideAddFriendDialog();
+                });
+            }
+        }
+        
+        // NOVÁ metoda - Ověření přihlášení před API voláním
+        checkAuthentication() {
+            if (!window.appState.isAuthInitialized) {
+                console.warn('⚠️ Auth ještě není inicializovaný');
+                return false;
+            }
+            
+            if (!window.appState.user) {
+                console.warn('⚠️ Uživatel není přihlášen');
+                showToast('Musíte být přihlášeni pro práci s přáteli', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // OPRAVENÁ funkce pro načítání přátel z API
+        async loadFriendsFromAPI() {
+            // Kontrola přihlášení
+            if (!this.checkAuthentication()) {
+                return;
+            }
+            
+            // Zabránit duplikátním voláním
+            if (this._isLoading) {
+                console.log('LoadFriendsFromAPI již probíhá, přeskakuji...');
+                return;
+            }
+            
+            this._isLoading = true;
+            
+            try {
+                console.log('👥 Načítám přátele z API pro uživatele:', window.appState.user.displayName);
+                
+                const response = await fetch('/api/friends/friends', {
+                    method: 'GET',
+                    credentials: 'include', // DŮLEŽITÉ - zahrnout session cookies
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        this.friends = data.friends || [];
+                        this.incomingRequests = data.incomingRequests || [];
+                        this.outgoingRequests = data.outgoingRequests || [];
+                        
+                        console.log(`✅ API načteno: ${this.friends.length} přátel, ${this.incomingRequests.length} příchozích, ${this.outgoingRequests.length} odchozích žádostí`);
+                        
+                        // Zobrazit notifikaci o čekajících žádostech
+                        if (this.incomingRequests.length > 0) {
+                            this.showPendingRequestsNotification();
+                        }
+                        
+                        this.updateFriendRequestsBadge();
+                        this.updateFriendsList();
+                    } else {
+                        console.warn('⚠️ Chyba při načítání přátel z API:', data.error);
+                    }
+                } else if (response.status === 401) {
+                    console.error('❌ Neautorizovaný přístup - uživatel není přihlášen');
+                    // Zkusit znovu ověřit přihlášení
+                    await checkUserLogin();
+                } else {
+                    console.warn('⚠️ API nedostupné:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Chyba při komunikaci s API přátel:', error);
+            } finally {
+                this._isLoading = false;
+            }
+        }
+        
+        // OPRAVENÁ žádost o přátelství - s wait na session
+        async addFriend(steamId, name, shareLocation = true, shareStats = false) {
+            if (!steamId || !name) return false;
+
+            console.log('🚀 addFriend() zahájena pro:', name);
+
+            // WAIT pro session stabilizaci
+            console.log('⏳ Čekám na stabilizaci session...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // NOVÁ KONTROLA - nejdříve zajistit platnou session
+            console.log('🔄 Zajišťuji platnou session před friends operací...');
+            
+            // Zkusit refresh uživatele před operací
+            try {
+                const authResponse = await fetch(`${API_URL}/user`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                console.log('📨 Auth response status:', authResponse.status);
+                console.log('📨 Auth response headers:', [...authResponse.headers.entries()]);
+                
+                if (authResponse.ok) {
+                    const userData = await authResponse.json();
+                    console.log('✅ Auth response data:', userData);
+                    
+                    if (userData.success && userData.user) {
+                        // Aktualizovat globální stav
+                        window.user = userData.user;
+                        window.appState.user = userData.user;
+                        console.log('✅ Session obnovena pro:', userData.user.displayName);
+                    } else {
+                        console.log('❌ Session neplatná:', userData);
+                        showToast('Session vypršela, obnovte stránku', 'error');
+                        return false;
+                    }
+                } else {
+                    console.log('❌ Session response error:', authResponse.status);
+                    const errorText = await authResponse.text();
+                    console.error('❌ Auth error text:', errorText);
+                    showToast('Problém s přihlášením, zkuste to znovu', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Session refresh error:', error);
+                showToast('Chyba při ověřování session', 'error');
+                return false;
+            }
+
+            // Kontrola přihlášení
+            if (!this.checkAuthentication()) {
+                return false;
+            }
+
+            // Kontrola, zda už není přítelem
+            if (this.isFriend(steamId)) {
+                showToast(`${name} je již v seznamu přátel`, 'info');
+                return false;
+            }
+
+            // Kontrola, zda už nemá pending request
+            if (this.hasPendingRequest(steamId)) {
+                showToast(`Žádost hráči ${name} již byla odeslána`, 'info');
+                return false;
+            }
+
+            // Kontrola, zda to není vlastní účet
+            if (steamId === window.appState.user.id) {
+                showToast('Nemůžete přidat sebe jako přítele', 'error');
+                return false;
+            }
+
+            try {
+                console.log(`👥 Odesílám žádost o přátelství: ${name} (${steamId})`);
+                
+                // EXTRA DEBUG před odesláním
+                console.log('🍪 Cookies před friends request:', document.cookie);
+                console.log('👤 Current user před request:', window.appState.user);
+                
+                const response = await fetch('/api/friends/request', {
+                    method: 'POST',
+                    credentials: 'include', // DŮLEŽITÉ
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'X-Requested-With': 'XMLHttpRequest' // Extra header
+                    },
+                    body: JSON.stringify({
+                        friendId: steamId,
+                        shareLocation: shareLocation,
+                        shareStats: shareStats
+                    })
+                });
+
+                console.log('📨 Friends request response status:', response.status);
+                console.log('📨 Friends request response headers:', [...response.headers.entries()]);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Friends request response data:', data);
+                    
+                    if (data.success) {
+                        showToast(`Žádost o přátelství odeslána hráči ${name}`, 'success');
+                        
+                        // POUZE refresh z API
+                        await this.loadFriendsFromAPI();
+                        
+                        // Aktualizovat seznam hráčů aby se hráč už nezobrazoval jako dostupný
+                        if (typeof updatePlayersList === 'function') {
+                            updatePlayersList();
+                        }
+                        
+                        console.log('✅ Žádost úspěšně odeslána a data refreshnuta');
+                        return true;
+                    } else {
+                        console.error('❌ API chyba:', data.error);
+                        showToast(data.error || 'Chyba při odesílání žádosti', 'error');
+                        return false;
+                    }
+                } else if (response.status === 401) {
+                    console.error('❌ 401 při friends request - session problem');
+                    
+                    const errorText = await response.text();
+                    console.error('❌ 401 Response text:', errorText);
+                    
+                    // Pokusit se o re-login
+                    console.log('🔄 Pokouším se o re-login...');
+                    await checkUserLogin();
+                    showToast('Session vypršela, zkuste to znovu', 'error');
+                    return false;
+                } else {
+                    console.error('❌ API chyba:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Response text:', errorText);
+                    showToast(`Server chyba: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Síťová chyba při odesílání žádosti:', error);
+                showToast('Chyba při odesílání žádosti', 'error');
+                return false;
+            }
+        }
+        
+        // Přijetí žádosti o přátelství
+        async acceptFriendRequest(requestId, shareLocation = true, shareStats = false) {
+            try {
+                const response = await fetch('/api/friends/accept', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requestId: requestId,
+                        shareLocation: shareLocation,
+                        shareStats: shareStats
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Žádost o přátelství přijata', 'success');
+                    await this.loadFriendsFromAPI();
+                    return true;
+                } else {
+                    showToast(data.error || 'Chyba při přijímání žádosti', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Chyba při přijímání žádosti:', error);
+                showToast('Chyba při přijímání žádosti', 'error');
+                return false;
+            }
+        }
+        
+        // Zrušení odchozí žádosti o přátelství
+        async cancelFriendRequest(steamId, name) {
+            // Potvrzovací dialog
+            if (!confirm(`Opravdu chcete zrušit žádost o přátelství pro hráče ${name}?`)) {
+                return false;
+            }
+            
+            try {
+                console.log(`Ruším žádost pro: ${name} (${steamId})`);
+                
+                const response = await fetch('/api/friends/cancel', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        friendId: steamId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Žádost pro ${name} byla zrušena`, 'info');
+                    await this.loadFriendsFromAPI();
+                    
+                    // Aktualizovat seznam hráčů aby se hráč zase zobrazoval jako dostupný
+                    if (typeof updatePlayersList === 'function') {
+                        updatePlayersList();
+                    }
+                    
+                    return true;
+                } else {
+                    showToast(data.error || 'Chyba při rušení žádosti', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Chyba při rušení žádosti:', error);
+                showToast('Chyba při rušení žádosti', 'error');
+                return false;
+            }
+        }
+        
+        async rejectFriendRequest(requestId) {
+            try {
+                const response = await fetch('/api/friends/reject', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requestId: requestId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Žádost odmítnuta', 'info');
+                    await this.loadFriendsFromAPI();
+                    return true;
+                } else {
+                    showToast(data.error || 'Chyba při odmítání žádosti', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Chyba při odmítání žádosti:', error);
+                showToast('Chyba při odmítání žádosti', 'error');
+                return false;
+            }
+        }
+        
+        // Odstranění přítele přes API
+        async removeFriend(steamId) {
+            const friend = this.getFriend(steamId);
+            if (!friend) return false;
+            
+            try {
+                const response = await fetch(`/api/friends/${steamId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Přítel ${friend.friend_name || friend.name || 'neznámý'} byl odebrán`, 'info');
+                    await this.loadFriendsFromAPI();
+                    return true;
+                } else {
+                    showToast(data.error || 'Chyba při odebírání přítele', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Chyba při odebírání přítele:', error);
+                showToast('Chyba při odebírání přítele', 'error');
+                return false;
+            }
+        }
+        
+        isFriend(steamId) {
+            return this.friends.some(f => (f.friend_steam_id || f.steamId) === steamId);
+        }
+        
+        getFriend(steamId) {
+            return this.friends.find(f => (f.friend_steam_id || f.steamId) === steamId);
+        }
+        
+        // NOVÁ metoda - kontrola pending requestů
+        hasPendingRequest(steamId) {
+            return this.outgoingRequests.some(req => 
+                req.friend_id === steamId || 
+                req.steamId === steamId ||
+                req.friend_steam_id === steamId
+            );
+        }
+        
+        // Zobrazuje i friend requests
+        updateFriendsList() {
+            if (!this.friendsList) return;
+            
+            if (!window.user) {
+                if (this.friendsPanel) {
+                    this.friendsPanel.style.display = 'none';
+                }
+                return;
+            } else {
+                if (this.friendsPanel) {
+                    this.friendsPanel.style.display = 'block';
+                }
+            }
+            
+            console.log('🔄 Aktualizuji seznam přátel...');
+            console.log(`  - ${this.friends.length} přátel`);
+            console.log(`  - ${this.incomingRequests.length} příchozích žádostí`);
+            console.log(`  - ${this.outgoingRequests.length} odchozích žádostí`);
+            
+            let contentHTML = '';
+            
+            // Příchozí žádosti o přátelství
+            if (this.incomingRequests.length > 0) {
+                console.log('📥 Zobrazuji příchozí žádosti:', this.incomingRequests);
+                
+                contentHTML += `
+                    <div style="margin-bottom: 15px; padding: 10px; background-color: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 0 4px 4px 0;">
+                        <h4 style="margin: 0 0 10px 0; color: #ffc107; font-size: 14px;">
+                            <i class="fa-solid fa-user-clock"></i> Žádosti o přátelství (${this.incomingRequests.length})
+                        </h4>
+                `;
+                
+                this.incomingRequests.forEach(request => {
+                    const requesterName = request.requester_name || `Hráč ${request.requester_steam_id}`;
+                    console.log(`  - Žádost od: ${requesterName} (ID: ${request.id})`);
+                    
+                    contentHTML += `
+                        <div style="background-color: rgba(255, 255, 255, 0.05); padding: 8px; margin-bottom: 8px; border-radius: 4px;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${requesterName}</div>
+                            <div style="display: flex; gap: 5px;">
+                                <button onclick="window.friendsManager.acceptFriendRequest(${request.id})" 
+                                        style="flex: 1; padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                                        onkeydown="if(event.key==='Enter') this.click()">
+                                    <i class="fa-solid fa-check"></i> Přijmout
+                                </button>
+                                <button onclick="window.friendsManager.rejectFriendRequest(${request.id})" 
+                                        style="flex: 1; padding: 4px 8px; background-color: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;"
+                                        onkeydown="if(event.key==='Enter') this.click()">
+                                    <i class="fa-solid fa-times"></i> Odmítnout
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentHTML += `</div>`;
+            } else {
+                console.log('📥 Žádné příchozí žádosti');
+            }
+            
+            // Odchozí žádosti o přátelství (čekají na přijetí)
+            if (this.outgoingRequests.length > 0) {
+                console.log('📤 Zobrazuji odchozí žádosti:', this.outgoingRequests);
+                
+                contentHTML += `
+                    <div style="margin-bottom: 15px; padding: 10px; background-color: rgba(33, 150, 243, 0.1); border-left: 3px solid #2196F3; border-radius: 0 4px 4px 0;">
+                        <h4 style="margin: 0 0 10px 0; color: #2196F3; font-size: 14px;">
+                            <i class="fa-solid fa-clock"></i> Sent requests (${this.outgoingRequests.length})
+                        </h4>
+                `;
+                
+                this.outgoingRequests.forEach(request => {
+                    const friendSteamId = request.friend_id || request.steamId;
+                    const friendName = request.friend_name || request.name || `Hráč ${friendSteamId}`;
+                    
+                    console.log(`  - Žádost pro: ${friendName} (ID: ${friendSteamId})`);
+                    
+                    contentHTML += `
+                        <div style="background-color: rgba(255, 255, 255, 0.05); padding: 8px; margin-bottom: 8px; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: bold;">${friendName}</div>
+                                    <div style="font-size: 12px; color: #888;">
+                                        <i class="fa-solid fa-hourglass-half"></i> Čeká na přijetí...
+                                    </div>
+                                </div>
+                                <button onclick="window.friendsManager.cancelFriendRequest('${friendSteamId}', '${friendName.replace(/'/g, "\\'")}')" 
+                                        class="friend-cancel-btn"
+                                        title="Zrušit žádost"
+                                        onkeydown="if(event.key==='Enter') this.click()">
+                                    <i class="fa-solid fa-times"></i> Zrušit
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentHTML += `</div>`;
+            } else {
+                console.log('📤 Žádné odchozí žádosti');
+            }
+            
+            // Současní přátelé
+            if (this.friends.length === 0 && this.incomingRequests.length === 0 && this.outgoingRequests.length === 0) {
+                contentHTML += '<div style="text-align: center; color: #aaa; padding: 10px;">Zatím nemáte žádné přátele</div>';
+            } else if (this.friends.length > 0) {
+                console.log('👥 Zobrazuji přátele:', this.friends);
+                
+                const players = this.getCurrentPlayersData();
+                
+                this.friends.forEach(friend => {
+                    const friendSteamId = friend.friend_steam_id || friend.steamId;
+                    const friendName = friend.friend_name || friend.name || friendSteamId;
+                    
+                    const isOnline = players && players.some(p => p.steamId === friendSteamId);
+                    const onlinePlayer = isOnline ? players.find(p => p.steamId === friendSteamId) : null;
+                    
+                    contentHTML += `
+                        <div class="friend-item" data-steam-id="${friendSteamId}">
+                            <div class="friend-name">
+                                <span class="friend-online ${isOnline ? 'online' : 'offline'}"></span>
+                                ${friendName}
+                                ${onlinePlayer ? `<span style="color: #aaa; font-size: 11px; margin-left: 5px;">(${onlinePlayer.dino})</span>` : ''}
+                            </div>
+                            <div class="friend-remove" data-steam-id="${friendSteamId}" title="Odebrat přítele">
+                                <i class="fa-solid fa-times"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            console.log('🎨 Nastavuji HTML obsah...');
+            this.friendsList.innerHTML = contentHTML;
+            
+            // Event listenery pro přátele
+            this.friendsList.querySelectorAll('.friend-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.friend-remove')) return;
+                    
+                    const steamId = item.getAttribute('data-steam-id');
+                    this.centerOnFriend(steamId);
+                });
+            });
+            
+            this.friendsList.querySelectorAll('.friend-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const steamId = btn.getAttribute('data-steam-id');
+                    this.removeFriend(steamId);
+                });
+            });
+            
+            this.updateFriendRequestsBadge();
+            console.log('✅ Seznam přátel aktualizován');
+        }
+        
+        // Získání aktuálních dat hráčů z různých zdrojů
+        getCurrentPlayersData() {
+            return window.players || window.playersData || playersData || 
+                   (window.app && window.app.players) || [];
+        }
+        
+        // Notifikace o čekajících žádostech
+        showPendingRequestsNotification() {
+            if (typeof showToast === 'function') {
+                showToast(`Máte ${this.incomingRequests.length} čekajících žádostí o přátelství`, 'info');
+            }
+        }
+        
+        // Aktualizace badge pro friend requests - pouze příchozí žádosti
+        updateFriendRequestsBadge() {
+            const incomingBadge = document.getElementById('friend-requests-badge');
+            const outgoingBadge = document.getElementById('outgoing-requests-badge');
+            
+            // Příchozí žádosti (červené)
+            if (incomingBadge) {
+                const incomingCount = this.incomingRequests.length;
+                
+                if (incomingCount > 0) {
+                    incomingBadge.textContent = incomingCount;
+                    incomingBadge.style.display = 'inline';
+                } else {
+                    incomingBadge.style.display = 'none';
+                }
+            }
+            
+            // Odchozí žádosti (modré)
+            if (outgoingBadge) {
+                const outgoingCount = this.outgoingRequests.length;
+                
+                if (outgoingCount > 0) {
+                    outgoingBadge.textContent = outgoingCount;
+                    outgoingBadge.style.display = 'inline';
+                } else {
+                    outgoingBadge.style.display = 'none';
+                }
+            }
+        }
+        
+        centerOnFriend(steamId) {
+            const players = this.getCurrentPlayersData();
+            
+            if (!players || !window.centerOnPlayer) return;
+            
+            const player = players.find(p => p.steamId === steamId);
+            if (!player || !player.x || !player.y) {
+                const friend = this.getFriend(steamId);
+                const friendName = friend ? (friend.friend_name || friend.name || friend.friend_steam_id) : 'Přítel';
+                if (typeof showToast === 'function') {
+                    showToast(`${friendName} není momentálně online`, 'info');
+                }
+                return;
+            }
+            
+            window.centerOnPlayer(player);
+            
+            if (typeof highlightMarker === 'function') {
+                highlightMarker(player);
+                setTimeout(() => {
+                    if (typeof unhighlightMarker === 'function') {
+                        unhighlightMarker(player);
+                    }
+                }, 3000);
+            }
+        }
+        
+        showAddFriendDialog() {
+            const players = this.getCurrentPlayersData();
+            
+            console.log('Debug - showAddFriendDialog players:', players);
+            
+            if (!players || players.length === 0) {
+                if (typeof showToast === 'function') {
+                    showToast('Žádní hráči nejsou online', 'info');
+                }
+                return;
+            }
+            
+            this.updatePlayerListDialog();
+            
+            if (this.friendDialog && this.friendDialogOverlay) {
+                this.friendDialog.style.display = 'block';
+                this.friendDialogOverlay.style.display = 'block';
+            }
+        }
+        
+        hideAddFriendDialog() {
+            if (this.friendDialog && this.friendDialogOverlay) {
+                this.friendDialog.style.display = 'none';
+                this.friendDialogOverlay.style.display = 'none';
+            }
+            
+            this.playerListDialog.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+        
+        updatePlayerListDialog() {
+            if (!this.playerListDialog) return;
+            
+            const players = this.getCurrentPlayersData();
+            
+            console.log('Debug - updatePlayerListDialog players:', players);
+            
+            let playersHTML = '';
+            
+            const availablePlayers = players.filter(player => {
+                const hasValidData = player.steamId && player.name;
+                const notSelf = !window.user || player.steamId !== window.user.id;
+                const notAlreadyFriend = !this.isFriend(player.steamId);
+                const noPendingRequest = !this.hasPendingRequest(player.steamId);
+                
+                return hasValidData && notSelf && notAlreadyFriend && noPendingRequest;
+            });
+            
+            console.log('Debug - availablePlayers:', availablePlayers);
+            
+            if (availablePlayers.length === 0) {
+                playersHTML = '<div style="text-align: center; color: #aaa; padding: 10px;">Žádní dostupní hráči pro přidání</div>';
+            } else {
+                availablePlayers.forEach(player => {
+                    playersHTML += `
+                        <label style="display: block; padding: 8px; cursor: pointer; border-bottom: 1px solid #333;">
+                            <input type="checkbox" value="${player.steamId}" data-name="${player.name}" style="margin-right: 8px;">
+                            ${player.name}
+                        </label>
+                    `;
+                });
+            }
+            
+            this.playerListDialog.innerHTML = playersHTML;
+        }
+        
+        async addSelectedFriends() {
+            if (!this.playerListDialog) return;
+            
+            // Zabránit dvojitému kliknutí
+            const addButton = document.getElementById('friend-dialog-add');
+            if (addButton && addButton.disabled) {
+                return;
+            }
+            
+            if (addButton) {
+                addButton.disabled = true;
+                addButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Odesílám...';
+            }
+            
+            const checkboxes = this.playerListDialog.querySelectorAll('input[type="checkbox"]:checked');
+            let addedCount = 0;
+            
+            const shareLocationCheckbox = document.getElementById('share-location');
+            const shareStatsCheckbox = document.getElementById('share-stats');
+            
+            const shareLocation = shareLocationCheckbox ? shareLocationCheckbox.checked : true;
+            const shareStats = shareStatsCheckbox ? shareStatsCheckbox.checked : false;
+            
+            console.log(`Začínám odesílat ${checkboxes.length} žádostí...`);
+            
+            for (const checkbox of checkboxes) {
+                const steamId = checkbox.value;
+                const name = checkbox.getAttribute('data-name');
+                
+                console.log(`Odesílám žádost pro: ${name} (${steamId})`);
+                
+                if (await this.addFriend(steamId, name, shareLocation, shareStats)) {
+                    addedCount++;
+                    console.log(`Úspěšně odesláno pro: ${name}`);
+                } else {
+                    console.log(`Selhalo pro: ${name}`);
+                }
+            }
+            
+            if (addedCount > 0) {
+                if (typeof showToast === 'function') {
+                    showToast(`Odesláno ${addedCount} žádostí o přátelství`, 'success');
+                }
+            }
+            
+            // Obnovit tlačítko
+            if (addButton) {
+                addButton.disabled = false;
+                addButton.innerHTML = '<i class="fa-solid fa-user-plus"></i> Odeslat žádosti';
+            }
+            
+            this.hideAddFriendDialog();
+        }
+        
+        // Metody pro kompatibilitu s původním kódem
+        updateFriendsDisplay() {
+            this.updateFriendsList();
+        }
+        
+        async loadPendingRequests() {
+            return this.incomingRequests;
+        }
+    }
+
+    // Inicializace rozměrů mapy s fixními rozměry
+    function initializeMap() {
+        updateMapDimensions();
+        
+        const containerRect = mapContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        const scaleX = containerWidth / 620;
+        const scaleY = containerHeight / 620;
+        mapScale = Math.min(scaleX, scaleY, 1);
+        
+        mapTranslateX = 0;
+        mapTranslateY = 0;
+        updateMapTransform();
+    }
+
+    // Aktualizace transformace mapy
+    function updateMapTransform() {
+        if (mapWrapper) {
+            mapWrapper.style.transform = `translate(${mapTranslateX}px, ${mapTranslateY}px) scale(${mapScale})`;
+        }
+    }
+
+    // GATEWAY MAPA - Přesná kalibrace podle islemaps.com
+    function positionMarker(marker, gameX, gameY) {
+        if (!marker || gameX === undefined || gameY === undefined) {
+            console.warn('Neplatné parametry pro positionMarker', { marker, gameX, gameY });
+            return;
+        }
+        
+        try {
+            // Gateway mapa hranice - přesná kalibrace
+            const MAP_BOUNDS = {
+                minLat: -700000,  // Západní hranice 
+                maxLat: 720000,   // Východní hranice 
+                minLong: -720000, // Severní hranice 
+                maxLong: 700000   // Jižní hranice 
+            };
+            
+            // Fixní rozměr mapy
+            const MAP_SIZE = 620;
+            
+            // Mapování souřadnic na pozici v pixelech (0-620)
+            function mapCoordinateToPixel(value, min, max, mapSize) {
+                const normalized = (value - min) / (max - min);
+                const clamped = Math.max(0, Math.min(1, normalized));
+                return clamped * mapSize;
+            }
+            
+            // Převést herní souřadnice přímo na pixely v rozmezí 0-620
+            const pixelX = mapCoordinateToPixel(gameX, MAP_BOUNDS.minLat, MAP_BOUNDS.maxLat, MAP_SIZE);
+            const pixelY = mapCoordinateToPixel(gameY, MAP_BOUNDS.minLong, MAP_BOUNDS.maxLong, MAP_SIZE);
+            
+            // Umístit marker přímo na tyto souřadnice
+            marker.style.left = `${pixelX}px`;
+            marker.style.top = `${pixelY}px`;
+            
+            console.debug(`Gateway kalibrace - Game(${gameX}, ${gameY}) -> Pixel(${pixelX.toFixed(2)}, ${pixelY.toFixed(2)})`);
+            
+        } catch (error) {
+            console.error('Chyba při pozicování markeru:', error);
+        }
+    }
+
+    // Vymazání všech markerů
+    function clearMarkers() {
+        if (markersContainer) {
+            markersContainer.innerHTML = '';
+        }
+    }
+
+    // Přidání markeru hráče
+    function addPlayerMarker(player) {
+        if (!markersContainer || !player.x || !player.y) return;
+
+        const marker = document.createElement('div');
+        marker.className = 'player-marker';
+        marker.dataset.playerId = player.steamId || player.name;
+        
+        // Určení typu dinosaura
+        const dinoType = getDinosaurType(player.dino);
+        marker.classList.add(`marker-${dinoType}`);
+        
+        // Označení vlastního hráče
+        if (window.user && player.steamId === window.user.id) {
+            marker.classList.add('marker-self');
+        }
+        
+        // Označení přítele
+        if (player.steamId && friendsManager && friendsManager.isFriend(player.steamId)) {
+            marker.classList.add('marker-friend');
+        }
+        
+        // Pozicování markeru s opravenou kalibrací
+        positionMarker(marker, player.x, player.y);
+        
+        // Event listenery
+        marker.addEventListener('mouseenter', (e) => showPlayerTooltip(player, e));
+        marker.addEventListener('mousemove', positionTooltip);
+        marker.addEventListener('mouseleave', hideTooltip);
+        marker.addEventListener('click', () => centerOnPlayer(player));
+        
+        markersContainer.appendChild(marker);
+        return marker;
+    }
+
+    // Určení typu dinosaura
+    function getDinosaurType(dinoName) {
+        const carnivores = [
+            'Carnotaurus', 'Allosaurus', 'Ceratosaurus', 'Dilophosaurus', 
+            'Omniraptor', 'Albertosaurus', 'Deinosuchus', 'Tyrannosaurus',
+            'Herrerasaurus', 'Compsognathus', 'Megalosaurus', 'Deinonychus'
+        ];
+        
+        const herbivores = [
+            'Triceratops', 'Stegosaurus', 'Parasaurolophus', 'Maiasaura',
+            'Camarasaurus', 'Therizinosaurus', 'Gallimimus', 'Dryosaurus',
+            'Pachycephalosaurus', 'Baryonyx', 'Kentrosaurus', 'Diabloceratops'
+        ];
+        
+        if (carnivores.some(name => dinoName.includes(name))) {
+            return 'carnivore';
+        } else if (herbivores.some(name => dinoName.includes(name))) {
+            return 'herbivore';
+        } else {
+            return 'other';
+        }
+    }
+
+    // Zvýraznění markeru
+    function highlightMarker(player) {
+        document.querySelectorAll('.player-marker').forEach(marker => {
+            marker.style.boxShadow = '';
+        });
+        
+        const marker = document.querySelector(`[data-player-id="${player.steamId || player.name}"]`);
+        if (marker) {
+            marker.style.boxShadow = '0 0 20px 5px rgba(255, 255, 0, 0.8)';
+            
+            setTimeout(() => {
+                marker.style.boxShadow = '';
+            }, 3000);
+        }
+    }
+
+    // Zrušení zvýraznění markeru
+    function unhighlightMarker(player) {
+        const marker = document.querySelector(`[data-player-id="${player.steamId || player.name}"]`);
+        if (marker) {
+            marker.style.boxShadow = '';
+        }
+    }
+
+    // OPRAVENÉ centrování na hráče s novými hranicemi
+    function centerOnPlayer(player) {
+        if (!player.x || !player.y) return;
+        
+        // Stejné hranice jako v positionMarker
+        const MAP_BOUNDS = {
+            minLat: -690000,
+            maxLat: 865000,
+            minLong: -725000,
+            maxLong: 690000
+        };
+        
+        const MAP_SIZE = 620;
+        
+        function mapCoordinateToPixel(value, min, max, mapSize) {
+            const normalized = (value - min) / (max - min);
+            const clamped = Math.max(0, Math.min(1, normalized));
+            return clamped * mapSize;
+        }
+        
+        const pixelX = mapCoordinateToPixel(player.x, MAP_BOUNDS.minLat, MAP_BOUNDS.maxLat, MAP_SIZE);
+        const pixelY = mapCoordinateToPixel(player.y, MAP_BOUNDS.minLong, MAP_BOUNDS.maxLong, MAP_SIZE);
+        
+        const containerRect = mapContainer.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        
+        const scaledPlayerX = (pixelX - MAP_SIZE/2) * mapScale;
+        const scaledPlayerY = (pixelY - MAP_SIZE/2) * mapScale;
+        
+        mapTranslateX = -scaledPlayerX;
+        mapTranslateY = -scaledPlayerY;
+        
+        updateMapTransform();
+        highlightMarker(player);
+        
+        console.debug(`Centrování na hráče: Game(${player.x}, ${player.y}) -> Pixel(${pixelX.toFixed(2)}, ${pixelY.toFixed(2)})`);
+    }
+
+    // Zobrazení tooltipu hráče
+    function showPlayerTooltip(player, event) {
+        if (!tooltip) return;
+        
+        const isSelfPlayer = window.user && player.steamId === window.user.id;
+        const isFriend = player.steamId && friendsManager && friendsManager.isFriend(player.steamId);
+        const isBountyTarget = player.steamId && bountyManager && bountyManager.isBountyTarget(player.steamId);
+        
+        let tooltipHTML = `
+            <div class="tooltip-title">
+                ${player.name}
+                ${isSelfPlayer ? '(Vy)' : ''}
+                ${isFriend ? '<i class="fa-solid fa-user-friends friend-icon"></i>' : ''}
+                ${isBountyTarget ? '<i class="fa-solid fa-crosshairs bounty-icon"></i>' : ''}
+            </div>
+        `;
+        
+        // Dino zobrazujeme pouze pro sebe a přátele
+        if (isSelfPlayer || isFriend) {
+            tooltipHTML += `<div>${player.dino}</div>`;
+            
+            if (player.growth) {
+                const displayGrowth = calculateDisplayGrowth(player.growth);
+                tooltipHTML += `<div>Růst: ${displayGrowth}%</div>`;
+            }
+        }
+
+        // Bounty informace
+        if (isBountyTarget && bountyManager) {
+            const bounties = bountyManager.getActiveBounties().filter(b => b.target_steam_id === player.steamId);
+            if (bounties.length > 0) {
+                const totalBounty = bounties.reduce((sum, b) => sum + b.amount, 0);
+                tooltipHTML += `<div style="color: var(--bounty-color); font-weight: bold;">Bounty: ${totalBounty} points</div>`;
+            }
+        }
+        
+        if (player.x && (isSelfPlayer || window.user?.isAdmin || isFriend)) {
+            tooltipHTML += `<div>Pozice: ${Math.round(player.x)}, ${Math.round(player.y)}</div>`;
+        }
+        
+        if ((isSelfPlayer || isFriend) && (player.health !== undefined || player.hunger !== undefined || player.thirst !== undefined)) {
+            tooltipHTML += `<div class="tooltip-stats visible">`;
+            
+            if (player.health !== undefined) {
+                const healthPercent = Math.round(player.health * 100);
+                tooltipHTML += `
+                    <div class="stat-bar health-bar">
+                        <div class="stat-bar-fill" style="width: ${healthPercent}%"></div>
+                    </div>
+                    <div class="stat-label">
+                        <span>Zdraví</span>
+                        <span>${healthPercent}%</span>
+                    </div>
+                `;
+            }
+            
+            if (player.hunger !== undefined) {
+                const hungerPercent = Math.round(player.hunger * 100);
+                tooltipHTML += `
+                    <div class="stat-bar hunger-bar">
+                        <div class="stat-bar-fill" style="width: ${hungerPercent}%"></div>
+                    </div>
+                    <div class="stat-label">
+                        <span>Hlad</span>
+                        <span>${hungerPercent}%</span>
+                    </div>
+                `;
+            }
+            
+            if (player.thirst !== undefined) {
+                const thirstPercent = Math.round(player.thirst * 100);
+                tooltipHTML += `
+                    <div class="stat-bar thirst-bar">
+                        <div class="stat-bar-fill" style="width: ${thirstPercent}%"></div>
+                    </div>
+                    <div class="stat-label">
+                        <span>Žízeň</span>
+                        <span>${thirstPercent}%</span>
+                    </div>
+                `;
+            }
+            
+            tooltipHTML += `</div>`;
+        }
+        
+        tooltip.innerHTML = tooltipHTML;
+        tooltip.style.opacity = '1';
+        positionTooltip(event);
+    }
+
+    // Pozicování tooltipu
+    function positionTooltip(event) {
+        if (!tooltip || !mapContainer) return;
+        
+        const rect = mapContainer.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        tooltip.style.left = `${x + 10}px`;
+        tooltip.style.top = `${y - 10}px`;
+    }
+
+    // Skrytí tooltipu
+    function hideTooltip() {
+        if (tooltip) {
+            tooltip.style.opacity = '0';
+        }
+    }
+
+    // Filtrace markerů podle typu dinosaura
+    function filterMarkers() {
+        const checkedFilters = Array.from(document.querySelectorAll('.dino-filter:checked')).map(cb => cb.value);
+        
+        document.querySelectorAll('.player-marker').forEach(marker => {
+            const playerId = marker.dataset.playerId;
+            const player = playersData.find(p => (p.steamId || p.name) === playerId);
+            
+            if (player) {
+                const dinoType = getDinosaurType(player.dino);
+                marker.style.display = checkedFilters.includes(dinoType) ? 'block' : 'none';
+            }
+        });
+        
+        updatePlayersList();
+    }
+
+    // Filtrace hráčů podle jména
+    function filterPlayers() {
+        const searchTerm = searchPlayer ? searchPlayer.value.toLowerCase() : '';
+        
+        filteredPlayersData = playersData.filter(player => {
+            const matchesSearch = !searchTerm || player.name.toLowerCase().includes(searchTerm);
+            const checkedFilters = Array.from(document.querySelectorAll('.dino-filter:checked')).map(cb => cb.value);
+            const dinoType = getDinosaurType(player.dino);
+            const matchesFilter = checkedFilters.includes(dinoType);
+            
+            return matchesSearch && matchesFilter;
+        });
+        
+        updatePlayersList();
+        
+        document.querySelectorAll('.player-marker').forEach(marker => {
+            const playerId = marker.dataset.playerId;
+            const isVisible = filteredPlayersData.some(p => (p.steamId || p.name) === playerId);
+            marker.style.display = isVisible ? 'block' : 'none';
+        });
+    }
+
+    // Aktualizace seznamu hráčů
+    function updatePlayersList() {
+        if (!playersContainer) return;
+        
+        const playersToShow = filteredPlayersData.length > 0 ? filteredPlayersData : playersData;
+        
+        if (playersToShow.length === 0) {
+            playersContainer.innerHTML = '<div id="no-players-message">No players online</div>';
+            return;
+        }
+        
+        playersContainer.innerHTML = playersToShow.map(player => {
+            const isSelfPlayer = window.user && player.steamId === window.user.id;
+            const isFriend = player.steamId && friendsManager && friendsManager.isFriend(player.steamId);
+            const isBountyTarget = player.steamId && bountyManager && bountyManager.isBountyTarget(player.steamId);
+            const dinoType = getDinosaurType(player.dino);
+            
+            let playerClass = 'player-item';
+            if (isSelfPlayer) playerClass += ' player-self';
+            if (isFriend) playerClass += ' player-friend';
+            if (isBountyTarget) playerClass += ' player-bounty';
+            
+            let playerHTML = `
+                <div class="${playerClass}" onclick="centerOnPlayer(${JSON.stringify(player).replace(/"/g, '&quot;')})">
+                    <div class="player-name">
+                        ${player.name}
+                        ${isSelfPlayer ? '(Vy)' : ''}
+                        ${isFriend ? '<i class="fa-solid fa-user-friends friend-icon"></i>' : ''}
+                        ${isBountyTarget ? '<i class="fa-solid fa-crosshairs bounty-icon"></i>' : ''}
+                    </div>
+            `;
+            
+            // Zobrazit dino a růst pouze pro sebe a přátele
+            if (isSelfPlayer || isFriend) {
+                playerHTML += `
+                    <div class="player-details">
+                        <span>${player.dino}</span>
+                        ${player.growth ? `<span>Růst: ${calculateDisplayGrowth(player.growth)}%</span>` : ''}
+                    </div>
+                `;
+                
+                // Statistiky
+                if (player.health !== undefined || player.hunger !== undefined || player.thirst !== undefined) {
+                    playerHTML += '<div class="player-stats">';
+                    
+                    if (player.health !== undefined) {
+                        const healthPercent = Math.round(player.health * 100);
+                        playerHTML += `
+                            <div class="stat-bar health-bar">
+                                <div class="stat-bar-fill" style="width: ${healthPercent}%"></div>
+                            </div>
+                            <div class="stat-label">
+                                <span>Zdraví</span>
+                                <span>${healthPercent}%</span>
+                            </div>
+                        `;
+                    }
+                    
+                    if (player.hunger !== undefined) {
+                        const hungerPercent = Math.round(player.hunger * 100);
+                        playerHTML += `
+                            <div class="stat-bar hunger-bar">
+                                <div class="stat-bar-fill" style="width: ${hungerPercent}%"></div>
+                            </div>
+                            <div class="stat-label">
+                                <span>Hlad</span>
+                                <span>${hungerPercent}%</span>
+                            </div>
+                        `;
+                    }
+                    
+                    if (player.thirst !== undefined) {
+                        const thirstPercent = Math.round(player.thirst * 100);
+                        playerHTML += `
+                            <div class="stat-bar thirst-bar">
+                                <div class="stat-bar-fill" style="width: ${thirstPercent}%"></div>
+                            </div>
+                            <div class="stat-label">
+                                <span>Žízeň</span>
+                                <span>${thirstPercent}%</span>
+                            </div>
+                        `;
+                    }
+                    
+                    playerHTML += '</div>';
+                }
+            } else if (isBountyTarget && bountyManager) {
+                // Zobrazit bounty informace pro všechny
+                const bounties = bountyManager.getActiveBounties().filter(b => b.target_steam_id === player.steamId);
+                if (bounties.length > 0) {
+                    const totalBounty = bounties.reduce((sum, b) => sum + b.amount, 0);
+                    playerHTML += `
+                        <div class="player-details">
+                            <span style="color: var(--bounty-color); font-weight: bold;">BOUNTY: ${totalBounty} points</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            playerHTML += '</div>';
+            
+            return playerHTML;
+        }).join('');
+        
+        if (playerCount) {
+            playerCount.textContent = `(${playersToShow.length})`;
+        }
+        
+        // Aktualizovat statistiky dinosaurů
+        updateDinoStats();
+    }
+
+    // Nová funkce pro aktualizaci statistik dinosaurů
+    function updateDinoStats() {
+        if (!dinoStatsContainer) return;
+        
+        const dinoCount = {};
+        
+        playersData.forEach(player => {
+            if (player.dino) {
+                if (!dinoCount[player.dino]) {
+                    dinoCount[player.dino] = 0;
+                }
+                dinoCount[player.dino]++;
+            }
+        });
+        
+        const sortedDinos = Object.entries(dinoCount).sort((a, b) => b[1] - a[1]);
+        
+        if (sortedDinos.length === 0) {
+            dinoStatsContainer.innerHTML = '<div style="text-align: center; color: #aaa; padding: 10px;">Žádní dinosauři online</div>';
+            return;
+        }
+        
+        dinoStatsContainer.innerHTML = sortedDinos.map(([dino, count]) => {
+            const dinoType = getDinosaurType(dino);
+            let typeIcon = '';
+            
+            if (dinoType === 'carnivore') {
+                typeIcon = '<i class="fa-solid fa-drumstick-bite" style="color: var(--carnivore-color);"></i>';
+            } else if (dinoType === 'herbivore') {
+                typeIcon = '<i class="fa-solid fa-leaf" style="color: var(--herbivore-color);"></i>';
+            } else {
+                typeIcon = '<i class="fa-solid fa-circle" style="color: var(--other-color);"></i>';
+            }
+            
+            return `
+                <div class="dino-item">
+                    <span>${typeIcon} ${dino}</span>
+                    <span style="font-weight: bold;">${count}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // NOVÁ funkce - zobrazení cache stavu
+    function updateCacheStatus(meta) {
+        let cacheIndicator = document.getElementById('cache-indicator');
+        if (!cacheIndicator) {
+            cacheIndicator = document.createElement('div');
+            cacheIndicator.id = 'cache-indicator';
+            cacheIndicator.style.cssText = `
+                position: absolute;
+                top: 80px;
+                right: 20px;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-size: 12px;
+                z-index: 100;
+                display: none;
+            `;
+            document.body.appendChild(cacheIndicator);
+        }
+        
+        if (meta.fromCache) {
+            const ageSeconds = Math.round(meta.cacheAge / 1000);
+            const ageText = ageSeconds < 60 ? `${ageSeconds}s` : `${Math.round(ageSeconds / 60)}m`;
+            
+            cacheIndicator.textContent = `📋 Cache (${ageText})`;
+            cacheIndicator.style.display = 'block';
+            cacheIndicator.style.backgroundColor = ageSeconds > 60 ? 'rgba(255, 152, 0, 0.8)' : 'rgba(76, 175, 80, 0.8)';
+            
+            setTimeout(() => {
+                cacheIndicator.style.display = 'none';
+            }, 3000);
+        } else {
+            cacheIndicator.style.display = 'none';
+        }
+    }
+
+    // OPRAVENÁ aktualizace dat ze serveru - používá kombinovaný endpoint
+    async function refreshData() {
+        try {
+            if (playerLoading) playerLoading.style.display = 'block';
+            if (noPlayersMessage) noPlayersMessage.style.display = 'none';
+            
+            // Použít kombinovaný endpoint pro zamezení RCON konfliktů
+            const response = await fetch(`${API_URL}/combined-data`, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            playersData = result.players || [];
+            filteredPlayersData = [...playersData];
+            
+            // Zobrazení cache informací
+            if (result.meta && result.meta.playerDataFromCache) {
+                updateCacheStatus({ 
+                    fromCache: true, 
+                    cacheAge: result.meta.playerCacheAge || 0 
+                });
+            }
+            
+            // Aktualizace počtu hráčů
+            if (onlineCount) {
+                onlineCount.textContent = playersData.length;
+            }
+            
+            clearMarkers();
+            
+            playersData.forEach(player => {
+                if (player.x && player.y) {
+                    addPlayerMarker(player);
+                }
+            });
+
+            // Aktualizovat bounty markery pokud existuje bounty manager
+            if (bountyManager) {
+                bountyManager.updateBountyMarkers();
+            }
+            
+            updatePlayersList();
+            filterPlayers();
+            
+            // DŮLEŽITÉ - aktualizace dat pro friends manager
+            window.players = playersData;
+            window.playersData = playersData;
+            
+            if (friendsManager) {
+                await friendsManager.loadFriendsFromAPI();
+                friendsManager.updateFriendsDisplay();
+            }
+
+            // Aktualizovat bounty data
+            if (bountyManager) {
+                await bountyManager.loadBountyData();
+            }
+            
+            console.log(`Načteno ${playersData.length} hráčů${result.fromCache ? ' (z cache)' : ''}`);
+            
+        } catch (error) {
+            console.error('Chyba při načítání dat:', error);
+            
+            // Fallback na separátní endpointy pokud kombinovaný selže
+            try {
+                console.log('Fallback na separátní API endpointy...');
+                await refreshDataSeparate();
+            } catch (fallbackError) {
+                console.error('Fallback také selhal:', fallbackError);
+                
+                showToast('Chyba při načítání dat ze serveru', 'error');
+            }
+            
+        } finally {
+            if (playerLoading) playerLoading.style.display = 'none';
+        }
+    }
+
+    // NOVÁ fallback funkce pro separátní načítání
+    async function refreshDataSeparate() {
+        console.log('🔄 Fallback: Načítám data separátně...');
+        
+        // Malé zpoždění mezi požadavky pro zamezení RCON konfliktu
+        const playersResponse = await fetch(`${API_URL}/playerlist`, {
+            method: 'GET',
+            headers: { 'Cache-Control': 'no-cache' },
+            credentials: 'include'
+        });
+        
+        if (!playersResponse.ok) {
+            throw new Error(`Players API error: ${playersResponse.status}`);
+        }
+        
+        const playersResult = await playersResponse.json();
+        playersData = playersResult.players || [];
+        filteredPlayersData = [...playersData];
+        
+        // Zobrazení cache informací
+        if (playersResult.meta) {
+            updateCacheStatus(playersResult.meta);
+        }
+        
+        // Aktualizace počtu hráčů
+        if (onlineCount) {
+            onlineCount.textContent = playersData.length;
+        }
+        
+        clearMarkers();
+        
+        playersData.forEach(player => {
+            if (player.x && player.y) {
+                addPlayerMarker(player);
+            }
+        });
+
+        // Aktualizovat bounty markery
+        if (bountyManager) {
+            bountyManager.updateBountyMarkers();
+        }
+        
+        updatePlayersList();
+        filterPlayers();
+        
+        // Aktualizace dat pro friends manager
+        window.players = playersData;
+        window.playersData = playersData;
+        
+        if (friendsManager) {
+            await friendsManager.loadFriendsFromAPI();
+            friendsManager.updateFriendsDisplay();
+        }
+
+        // Aktualizovat bounty data
+        if (bountyManager) {
+            await bountyManager.loadBountyData();
+        }
+        
+        console.log(`✅ Fallback úspěšný: ${playersData.length} hráčů`);
+    }
+
+    // Aktualizace uživatelského rozhraní
+    function updateUserInterface(user) {
+        if (authPanel) {
+            const p = authPanel.querySelector('p');
+            const actions = authPanel.querySelector('.auth-panel-actions');
+            if (p) p.style.display = 'none';
+            if (actions) actions.style.display = 'none';
+        }
+        
+        if (userInfo) {
+            userInfo.style.display = 'block';
+        }
+        
+        if (userName) {
+            userName.textContent = user.displayName || user.name;
+        }
+        
+        if (adminBadge) {
+            adminBadge.style.display = user.isAdmin ? 'inline' : 'none';
+        }
+        
+        if (friendsPanel) {
+            friendsPanel.style.display = 'block';
+        }
+    }
+
+    // Odhlášení uživatele
+    async function logout() {
+        try {
+            const response = await fetch(`${API_URL}/logout`, { method: 'GET' });
+            if (response.ok) {
+                window.user = null;
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Chyba při odhlašování:', error);
+        }
+    }
+
+    // Ovládání mapy myší s aktualizací rozměrů
+    function setupMapControls() {
+        if (!mapContainer) return;
+
+        // Zoom kolečkem myši
+        mapContainer.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            
+            const rect = mapContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left - rect.width / 2;
+            const mouseY = e.clientY - rect.top - rect.height / 2;
+            
+            const oldScale = mapScale;
+            const zoomFactor = 0.1;
+            
+            if (e.deltaY < 0) {
+                mapScale = Math.min(mapScale + zoomFactor, 3);
+            } else {
+                mapScale = Math.max(mapScale - zoomFactor, 0.5);
+            }
+            
+            const scaleChange = mapScale / oldScale;
+            mapTranslateX = mouseX + scaleChange * (mapTranslateX - mouseX);
+            mapTranslateY = mouseY + scaleChange * (mapTranslateY - mouseY);
+            
+            updateMapTransform();
+        });
+
+        // Drag pro pohyb mapy
+        mapContainer.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('player-marker') || e.target.classList.contains('bounty-marker')) return;
+            
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            mapContainer.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - lastMouseX;
+            const deltaY = e.clientY - lastMouseY;
+            
+            mapTranslateX += deltaX;
+            mapTranslateY += deltaY;
+            
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            updateMapTransform();
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                mapContainer.style.cursor = 'move';
+            }
+        });
+
+        // Touch ovládání pro mobily
+        let lastTouchDistance = 0;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+
+        mapContainer.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1) {
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+            e.preventDefault();
+        });
+
+        mapContainer.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 1) {
+                const deltaX = e.touches[0].clientX - lastTouchX;
+                const deltaY = e.touches[0].clientY - lastTouchY;
+                
+                mapTranslateX += deltaX;
+                mapTranslateY += deltaY;
+                
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+                
+                updateMapTransform();
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (lastTouchDistance > 0) {
+                    const scaleChange = distance / lastTouchDistance;
+                    mapScale = Math.max(0.5, Math.min(3, mapScale * scaleChange));
+                    updateMapTransform();
+                }
+                
+                lastTouchDistance = distance;
+            }
+            e.preventDefault();
+        });
+
+        // Aktualizovat při změně velikosti okna jen škálování
+        window.addEventListener('resize', function() {
+            initializeMap();
+        });
+    }
+
+    // Ovládání tlačítky
+    function setupControlButtons() {
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const resetViewBtn = document.getElementById('reset-view');
+
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', function() {
+                mapScale = Math.min(mapScale + 0.2, 3);
+                updateMapTransform();
+            });
+        }
+
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', function() {
+                mapScale = Math.max(mapScale - 0.2, 0.5);
+                updateMapTransform();
+            });
+        }
+
+        if (resetViewBtn) {
+            resetViewBtn.addEventListener('click', function() {
+                initializeMap();
+            });
+        }
+    }
+
+    // Toast notifikace
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.classList.add('toast', type);
+        
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+        if (type === 'bounty') icon = 'fa-crosshairs';
+        
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5300);
+    }
+
+    // Event listenery pro vyhledávání a filtry
+    function setupEventListeners() {
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        if (searchPlayer) {
+            searchPlayer.addEventListener('input', filterPlayers);
+        }
+
+        // Event listenery pro filtry dinosaurů
+        document.querySelectorAll('.dino-filter').forEach(checkbox => {
+            checkbox.addEventListener('change', filterMarkers);
+        });
+
+        // Event listenery pro správu přátel
+        if (addFriendBtn) {
+            addFriendBtn.addEventListener('click', () => {
+                friendsManager.showAddFriendDialog();
+            });
+        }
+
+        if (friendDialogCancel) {
+            friendDialogCancel.addEventListener('click', () => {
+                friendsManager.hideAddFriendDialog();
+            });
+        }
+
+        if (friendDialogOverlay) {
+            friendDialogOverlay.addEventListener('click', () => {
+                friendsManager.hideAddFriendDialog();
+            });
+        }
+
+        if (friendDialogAdd) {
+            friendDialogAdd.addEventListener('click', () => {
+                friendsManager.addSelectedFriends();
+            });
+        }
+    }
+    
+    // OPRAVENÁ inicializace aplikace s lepším auth handlingem
+    async function init() {
+        console.log('🚀 Inicializace mapového rozhraní pro Gateway mapu...');
+        console.log('📍 Kalibrace podle islemaps.com');
+        
+        // Inicializace mapy na výchozí pozici
+        initializeMap();
+        
+        // Nastavení ovládání mapy
+        setupMapControls();
+        
+        // Nastavení tlačítek
+        setupControlButtons();
+        
+        // Nastavení event listenerů
+        setupEventListeners();
+        
+        // NEJDŘÍVE kontrola přihlášení - počkat na dokončení
+        await checkUserLogin();
+        
+        // NOVÉ - po autentifikaci zkontrolovat a vynutit refresh pokud je user přihlášen
+        if (window.appState.user) {
+            console.log('👤 Uživatel je přihlášen, vynucuji refresh dat...');
+            // Malé zpoždění pro jistotu
+            setTimeout(async () => {
+                await refreshData();
+                console.log('🔄 Data refreshnuta po přihlášení');
+            }, 500);
+        } else {
+            // Teprve pak načíst data pro nepřihlášené
+            await refreshData();
+        }
+        
+        console.log('✅ Mapové rozhraní inicializováno pro Gateway mapu 620x620px');
+        console.log('Kalibrace: rozmezí -690,000 až +865,000 pro X osu, -725,000 až +690,000 pro Y osu');
+        console.log('🎯 Bounty systém integrován a připraven');
+    }
+
+    // Automatická aktualizace každých 60 sekund
+    setInterval(() => {
+        refreshData();
+    }, AUTO_REFRESH_INTERVAL * 1000);
+
+    // Spuštění inicializace
+    init();
+
+    // Globální funkce pro kompatibilitu
+    window.positionMarker = positionMarker;
+    window.clearMarkers = clearMarkers;
+    window.addPlayerMarker = addPlayerMarker;
+    window.highlightMarker = highlightMarker;
+    window.unhighlightMarker = unhighlightMarker;
+    window.centerOnPlayer = centerOnPlayer;
+    window.showPlayerTooltip = showPlayerTooltip;
+    window.positionTooltip = positionTooltip;
+    window.hideTooltip = hideTooltip;
+    window.filterMarkers = filterMarkers;
+    window.filterPlayers = filterPlayers;
+    window.updateMapTransform = updateMapTransform;
+    window.showToast = showToast;
+    window.friendsManager = friendsManager;
+    window.bountyManager = bountyManager;
+    window.updatePlayersList = updatePlayersList;
+    window.players = playersData;
+    window.playersData = playersData;
+    window.updateMapDimensions = updateMapDimensions;
+    window.calculateDisplayGrowth = calculateDisplayGrowth;
+});
+    </script>
+</body>
+</html>

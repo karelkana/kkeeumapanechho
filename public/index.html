@@ -1134,16 +1134,58 @@
             margin-left: 5px;
         }
     </style>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0c0c0c;
+      color: #e4e4e4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-image: url("/assets/bg_forest.jpg");
+      background-size: cover;
+      background-position: center;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1000px rgba(0,0,0,0.6);
+    }
+    header img {
+      max-height: 180px;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      background: #111;
+      padding: 1em;
+      border-bottom: 1px solid #222;
+    }
+    nav a {
+      color: #ccc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      color: #ff4747;
+    }
+  </style>
+
 </head>
 <body>
-<div class="navbar">
-    <h1><i class="fa-solid fa-dragon"></i> [EU] Jursky Masakr 1.5x Grow I Stats AI & Food Boost I CZ/SK I Map</h1>
-    <div class="nav-links">
-        <a href="/" class="active"><i class="fa-solid fa-map"></i> Mapa</a>
-        <a href="/stats.html"><i class="fa-solid fa-chart-bar"></i> Stats</a>
-        <a href="https://discord.gg/8MdXzVNBMY"><i class="fa-brands fa-discord"></i> Discord</a>
-    </div>
-</div>
+
+<nav>
+    <a href="/">🦖 Jursky Masakr</a>
+    <a href="/">Mapa</a>
+    <a href="/stats.html">Statistiky</a>
+    <a href="https://discord.gg/8MdXzVNBMY" target="_blank">Discord</a>
+  </nav>
+
 
     <div class="content">
         <div class="sidebar">
@@ -1179,48 +1221,7 @@
                 </div>
             </div>
 
-            <!-- BOUNTY SYSTEM PANEL -->
-            <div class="bounty-panel" id="bounty-panel">
-                <h3>
-                    <i class="fa-solid fa-crosshairs"></i> Bounty System
-                    <span id="bounty-badge" class="notification-badge" style="display: none; background-color: var(--bounty-color); color: #000;" title="Active bounties">0</span>
-                </h3>
-                
-                <!-- User Economy -->
-                <div class="bounty-economy" id="bounty-economy" style="display: none;">
-                    <div class="bounty-points" id="user-bounty-points">0</div>
-                    <div class="bounty-rank">Bounty Points</div>
-                </div>
 
-                <!-- Active Bounties List -->
-                <div class="bounty-list" id="bounty-list">
-                    <div style="text-align: center; color: #aaa; padding: 10px;">
-                        Loading bounties...
-                    </div>
-                </div>
-
-                <!-- Create Bounty Form -->
-                <div class="create-bounty-form" id="create-bounty-form" style="display: none;">
-                    <h4><i class="fa-solid fa-plus"></i> Create Bounty</h4>
-                    <div class="form-group">
-                        <label for="bounty-target">Target Player:</label>
-                        <select id="bounty-target">
-                            <option value="">Select a player...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="bounty-amount">Bounty Amount:</label>
-                        <input type="number" id="bounty-amount" min="100" step="50" placeholder="Minimum 100 points">
-                    </div>
-                    <button id="create-bounty-btn" class="bounty-btn hunt" style="width: 100%; padding: 10px;">
-                        <i class="fa-solid fa-crosshairs"></i> Place Bounty
-                    </button>
-                </div>
-
-                <button id="toggle-bounty-form" class="bounty-btn hunt" style="width: 100%; margin-top: 10px; display: none;">
-                    <i class="fa-solid fa-plus"></i> Create New Bounty
-                </button>
-            </div>
 
             <div class="filter-panel">
                 <h3><i class="fa-solid fa-filter"></i> Filters</h3>
